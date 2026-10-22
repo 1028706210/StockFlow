@@ -1,0 +1,31 @@
+# IntelliJ HTTP Client: provide local variables password, skuId and orderId.
+# Put credentials in an untracked http-client.private.env.json, not this file.
+
+### Warehouse identity
+GET http://127.0.0.1:8082/api/auth/me
+Authorization: Basic warehouse {{password}}
+
+### Create a SKU
+POST http://127.0.0.1:8082/api/skus
+Authorization: Basic warehouse {{password}}
+Content-Type: application/json
+
+{"code":"MUG-001","name":"Demo mug","price":12.50}
+
+### Receive stock; repeat the same key/content to verify idempotency
+POST http://127.0.0.1:8082/api/inventory/{{skuId}}/receipts
+Authorization: Basic warehouse {{password}}
+Content-Type: application/json
+
+{"operationKey":"receipt-001","quantity":10}
+
+### Create an order; repeat this request to get the same order
+POST http://127.0.0.1:8082/api/orders
+Authorization: Basic buyer {{password}}
+Content-Type: application/json
+
+{"requestKey":"order-001","items":[{"skuId":{{skuId}},"quantity":2}]}
+
+### Read own order
+GET http://127.0.0.1:8082/api/orders/{{orderId}}
+Authorization: Basic buyer {{password}}

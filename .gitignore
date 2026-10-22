@@ -1,0 +1,8 @@
+target/
+.local/
+artifacts/
+.idea/
+*.iml
+*.log
+.env
+http-client.private.env.json

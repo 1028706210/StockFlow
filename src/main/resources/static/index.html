@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>StockFlow · 库存与订单</title><link rel="stylesheet" href="/styles.css"><script src="/app.js" defer></script></head>
+<body><main>
+<header><p class="eyebrow">STOCKFLOW / P0</p><h1>库存与订单</h1><p>先把库存和订单做正确。当前可演示商品入库、库存预留和请求重放。</p></header>
+<section><h2>本地演示身份</h2><form id="login"><label>账号<select name="username"><option>warehouse</option><option>buyer</option><option>buyer2</option><option>admin</option></select></label><label>演示口令<input name="password" type="password" autocomplete="current-password" required></label><button>验证身份</button><span id="identity" aria-live="polite"></span></form><p class="note">口令见项目 .local/demo-login.txt；只保存在当前页面内存中。</p></section>
+<div class="grid">
+<section><h2>1. 建立商品</h2><form id="sku"><label>编码<input name="code" value="MUG-001" required maxlength="40"></label><label>名称<input name="name" value="演示马克杯" required maxlength="120"></label><label>单价<input name="price" type="number" min="0" max="999999.99" step="0.01" value="12.50" required></label><button>创建商品</button></form></section>
+<section><h2>2. 商品入库</h2><form id="receipt"><label>SKU ID<input name="skuId" type="number" min="1" value="1" required></label><label>数量<input name="quantity" type="number" min="1" max="1000000" value="10" required></label><label>操作键<input name="operationKey" required maxlength="64"></label><button>入库 / 重放原操作</button></form></section>
+<section><h2>3. 买家下单</h2><form id="order"><label>请求键<input name="requestKey" required maxlength="64"></label><label>商品明细<textarea name="items" rows="4" required>[{"skuId":1,"quantity":2}]</textarea></label><button>下单 / 重放原请求</button><button class="secondary" type="button" id="new-key">生成新请求键</button></form></section>
+<section><h2>4. 查看结果</h2><div class="actions"><button type="button" id="load-skus">商品列表</button><button type="button" id="load-stock">库存列表</button><button type="button" id="load-orders">我的订单</button></div><form id="detail"><label>订单 ID<input name="id" type="number" min="1" required></label><button>查看订单</button></form><p class="note">创建/入库使用 warehouse；下单和订单查询使用 buyer。不同买家的订单相互隔离。</p></section>
+</div>
+<section><h2>请求结果</h2><p id="result-status" role="status">等待操作</p><pre id="result" aria-live="polite">{}</pre></section>
+<footer>当前阶段：P0 数据正确性。确认、取消、超时回收和发货属于下一阶段。</footer>
+</main></body></html>
