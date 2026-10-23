@@ -1,15 +1,75 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>StockFlow · 库存与订单</title><link rel="stylesheet" href="/styles.css"><script src="/app.js" defer></script></head>
-<body><main>
-<header><p class="eyebrow">STOCKFLOW / P0</p><h1>库存与订单</h1><p>先把库存和订单做正确。当前可演示商品入库、库存预留和请求重放。</p></header>
-<section><h2>本地演示身份</h2><form id="login"><label>账号<select name="username"><option>warehouse</option><option>buyer</option><option>buyer2</option><option>admin</option></select></label><label>演示口令<input name="password" type="password" autocomplete="current-password" required></label><button>验证身份</button><span id="identity" aria-live="polite"></span></form><p class="note">口令见项目 .local/demo-login.txt；只保存在当前页面内存中。</p></section>
-<div class="grid">
-<section><h2>1. 建立商品</h2><form id="sku"><label>编码<input name="code" value="MUG-001" required maxlength="40"></label><label>名称<input name="name" value="演示马克杯" required maxlength="120"></label><label>单价<input name="price" type="number" min="0" max="999999.99" step="0.01" value="12.50" required></label><button>创建商品</button></form></section>
-<section><h2>2. 商品入库</h2><form id="receipt"><label>SKU ID<input name="skuId" type="number" min="1" value="1" required></label><label>数量<input name="quantity" type="number" min="1" max="1000000" value="10" required></label><label>操作键<input name="operationKey" required maxlength="64"></label><button>入库 / 重放原操作</button></form></section>
-<section><h2>3. 买家下单</h2><form id="order"><label>请求键<input name="requestKey" required maxlength="64"></label><label>商品明细<textarea name="items" rows="4" required>[{"skuId":1,"quantity":2}]</textarea></label><button>下单 / 重放原请求</button><button class="secondary" type="button" id="new-key">生成新请求键</button></form></section>
-<section><h2>4. 查看结果</h2><div class="actions"><button type="button" id="load-skus">商品列表</button><button type="button" id="load-stock">库存列表</button><button type="button" id="load-orders">我的订单</button></div><form id="detail"><label>订单 ID<input name="id" type="number" min="1" required></label><button>查看订单</button></form><p class="note">创建/入库使用 warehouse；下单和订单查询使用 buyer。不同买家的订单相互隔离。</p></section>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#246b59"><title>StockFlow · 业务工作台</title>
+<link rel="stylesheet" href="/styles.css"><script type="module" src="/app.js"></script>
+</head>
+<body>
+<section id="login-screen" class="login-layout">
+  <div class="login-story">
+    <a class="brand" href="#overview"><span class="brand-mark">SF</span><span>StockFlow<small>库存与订单工作台</small></span></a>
+    <div class="login-heading"><p class="eyebrow">MAKE EVERY UNIT COUNT</p><h1>掌握库存，<br>让订单有序发生。</h1><p class="lead">从商品建档到库存入库，再到订单预留。<br>把每天的业务，放在一个清晰的工作台。</p></div>
+    <ol class="journey"><li><span>01</span><div><strong>建立商品</strong><small>编码、名称与价格，统一管理</small></div></li><li><span>02</span><div><strong>库存入库</strong><small>实存、预留与可用量，一目了然</small></div></li><li><span>03</span><div><strong>创建订单</strong><small>按商品选择，安全重试提交</small></div></li></ol>
+    <p class="login-foot">STOCKFLOW <span>单仓 · 本地演示环境</span></p>
+  </div>
+  <div class="login-panel"><div class="login-card">
+    <span class="pill">本地演示</span><h2>进入工作台</h2><p class="muted">选择你的工作角色，开始处理业务。</p>
+    <form id="login-form"><label>演示账号<select name="username" id="login-user"><option value="warehouse">warehouse · 仓库管理</option><option value="buyer">buyer · 买家</option><option value="buyer2">buyer2 · 第二位买家</option><option value="admin">admin · 管理员</option></select></label>
+    <label>演示口令<input id="login-password" name="password" type="password" autocomplete="off" placeholder="输入本机生成的演示口令" required></label>
+    <p id="login-error" class="form-error" role="alert" hidden></p><button class="button primary wide" type="submit">进入工作台</button></form>
+    <div class="login-note"><strong>首次使用？</strong><p>口令保存在项目 <code>.local/demo-login.txt</code>。所有演示账号共用本机口令，切换账号即可体验不同角色。</p></div>
+    <p class="fine">仓管负责商品与入库；买家负责下单与本人订单。</p>
+  </div></div>
+</section>
+<div id="workspace" class="workspace" hidden>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <aside id="sidebar" class="sidebar">
+    <a class="brand" href="#overview"><span class="brand-mark">SF</span><span>StockFlow<small>库存与订单工作台</small></span></a>
+    <p class="nav-caption">工作空间</p>
+    <nav aria-label="业务导航"><a href="#overview" data-nav="overview">工作概览<span>01</span></a><a href="#products" data-nav="products">商品管理<span>02</span></a><a href="#inventory" data-nav="inventory" data-role="warehouse">库存管理<span>03</span></a><a href="#orders" data-nav="orders" data-role="buyer">我的订单<span>03</span></a><a href="#new-order" data-nav="new-order" data-role="buyer">创建订单<span>04</span></a></nav>
+    <div class="sidebar-bottom"><div class="environment"><span class="status-dot"></span>本地演示环境</div><p>当前支持商品、入库与订单预留。<br>完整履约流程将在后续完善。</p><button class="text-button" id="open-help">查看使用说明</button></div>
+  </aside>
+  <button id="sidebar-backdrop" class="sidebar-backdrop" aria-label="关闭导航" hidden></button>
+  <div class="main-shell">
+    <header class="topbar"><div class="topbar-left"><button class="button subtle mobile-menu" id="menu-toggle" aria-expanded="false" aria-controls="sidebar">菜单</button><span class="breadcrumb">工作空间 <span>/</span> <strong id="breadcrumb-page">工作概览</strong></span></div><div class="account"><span class="avatar" id="avatar">W</span><div><strong id="account-name"></strong><small id="account-role"></small></div><button class="text-button" id="sign-out">切换账号</button></div></header>
+    <main id="main-content" tabindex="-1">
+      <div class="page-heading"><div><p class="eyebrow" id="page-kicker">WORKSPACE OVERVIEW</p><h1 id="page-title">工作概览</h1><p class="muted" id="page-description"></p></div><div class="heading-actions"><span class="fine" id="updated-at"></span><button class="button secondary" id="refresh-data">刷新数据</button><button class="button primary" id="heading-action" hidden></button></div></div>
+      <div id="load-error" class="notice error" role="alert" hidden></div>
+      <div id="loading-note" class="notice" role="status" hidden>正在同步业务数据…</div>
+      <section id="view-overview" class="view">
+        <div class="metrics" id="metrics"></div>
+        <div class="overview-grid"><section class="panel"><div class="panel-heading"><div><p class="eyebrow">RECENT ACTIVITY</p><h2 id="recent-title">库存概况</h2></div><button class="text-button" id="overview-more">查看全部</button></div><div class="table-scroll"><table><caption class="sr-only">概览最近数据</caption><thead id="recent-head"></thead><tbody id="recent-body"></tbody></table></div><div id="recent-empty" class="empty-state" hidden></div></section>
+        <section class="panel quick-panel"><p class="eyebrow">QUICK START</p><h2>下一步，轻松完成</h2><p class="muted" id="quick-description"></p><div id="quick-actions" class="quick-actions"></div><div class="scope-note"><strong>当前业务范围</strong><p>订单创建后处于待确认状态。确认、取消、超时释放与发货将在后续版本提供；当前预留不会自动释放。</p></div></section></div>
+        <p class="data-note">指标根据本次加载的最近 100 条数据计算，不代表全库统计。</p>
+      </section>
+      <section id="view-products" class="view" hidden>
+        <section class="panel"><div class="table-toolbar"><div class="search-field"><label for="products-search" class="sr-only">搜索商品</label><input id="products-search" type="search" placeholder="搜索商品名称或编码" data-filter="products"></div><span class="fine" id="products-loaded"></span></div><div class="table-scroll"><table><caption class="sr-only">商品列表</caption><thead><tr><th>商品</th><th>SKU 编码</th><th class="number">单价</th><th>状态</th><th class="right">操作</th></tr></thead><tbody id="products-body"></tbody></table></div><div id="products-empty" class="empty-state" hidden></div><div id="products-pagination" class="pagination"></div></section>
+      </section>
+      <section id="view-inventory" class="view" hidden>
+        <section class="panel"><div class="table-toolbar"><div class="search-field"><label class="sr-only" for="inventory-search">搜索库存</label><input id="inventory-search" type="search" placeholder="搜索商品名称或编码" data-filter="inventory"></div><label class="inline-label">库存状态<select id="inventory-status"><option value="all">全部状态</option><option value="healthy">库存充足</option><option value="low">低库存（可用量低于 10）</option><option value="empty">暂无可用</option></select></label></div><div class="table-scroll"><table><caption class="sr-only">库存列表</caption><thead><tr><th>商品 / 编码</th><th class="number">实存量</th><th class="number">已预留</th><th class="number">可用量</th><th>库存状态</th><th class="right">操作</th></tr></thead><tbody id="inventory-body"></tbody></table></div><div id="inventory-empty" class="empty-state" hidden></div><div id="inventory-pagination" class="pagination"></div></section><p class="data-note">可用量 = 实存量 − 已预留量。低库存提示阈值为 10 件，仅用于本页面提示。</p>
+      </section>
+      <section id="view-orders" class="view" hidden>
+        <div class="notice">当前仅提供待确认订单的创建与查询，已预留库存不会自动释放。</div>
+        <section class="panel"><div class="table-toolbar"><div class="search-field"><label class="sr-only" for="orders-search">搜索订单号</label><input id="orders-search" type="search" placeholder="搜索订单号" data-filter="orders"></div><span class="fine" id="orders-loaded"></span></div><div class="table-scroll"><table><caption class="sr-only">本人订单列表</caption><thead><tr><th>订单号</th><th>状态</th><th class="number">订单金额</th><th>记录到期时间</th><th class="right">操作</th></tr></thead><tbody id="orders-body"></tbody></table></div><div id="orders-empty" class="empty-state" hidden></div><div id="orders-pagination" class="pagination"></div></section>
+      </section>
+      <section id="view-new-order" class="view" hidden>
+        <form id="order-form" class="order-layout">
+          <section class="panel"><div class="panel-heading"><div><p class="eyebrow">ORDER ITEMS</p><h2>选择商品</h2></div><span class="fine">每单最多 10 种商品</span></div>
+          <fieldset id="cart-fieldset"><legend class="sr-only">订单商品明细</legend><div class="cart-labels"><span>商品</span><span>数量</span><span>小计</span><span></span></div><div id="cart-lines"></div><button type="button" class="button secondary" id="add-cart-line">添加一行商品</button></fieldset>
+          <div class="order-tip">单个商品合计 1–99 件；同一商品会合并计算。预览金额仅供参考，最终金额以服务端下单结果为准。</div></section>
+          <aside class="panel order-summary"><p class="eyebrow">ORDER SUMMARY</p><h2>订单摘要</h2><dl><div><dt>商品种类</dt><dd id="cart-kind-count">—</dd></div><div><dt>预览总额</dt><dd class="summary-total" id="cart-total">—</dd></div></dl><label class="request-label">请求标识<input name="requestKey" id="order-key" maxlength="64" required pattern="[A-Za-z0-9][A-Za-z0-9._:\-]{0,63}" readonly></label><p class="fine">每次新订单自动生成。遇到网络问题时，保留原标识重试，避免重复下单。</p><p id="cart-error" class="form-error" role="status"></p><button id="submit-order" class="button primary wide" type="submit">提交订单</button><button id="new-order-reset" class="button secondary wide" type="button">开始另一笔订单</button><div id="order-success" class="success-box" hidden></div></aside>
+        </form>
+      </section>
+      <footer class="workspace-footer"><span>StockFlow · 单仓业务工作台</span><span>最近 100 条 · 本地演示数据</span></footer>
+    </main>
+  </div>
 </div>
-<section><h2>请求结果</h2><p id="result-status" role="status">等待操作</p><pre id="result" aria-live="polite">{}</pre></section>
-<footer>当前阶段：P0 数据正确性。确认、取消、超时回收和发货属于下一阶段。</footer>
-</main></body></html>
+<dialog id="sku-dialog" aria-labelledby="sku-dialog-title"><form id="sku-form"><div class="dialog-heading"><div><p class="eyebrow">NEW PRODUCT</p><h2 id="sku-dialog-title">新增商品</h2></div><button type="button" class="text-button" data-close="sku-dialog" aria-label="关闭新增商品">关闭</button></div><p class="muted">创建商品后，到库存管理完成入库。</p><label>商品名称<input name="name" required maxlength="120" placeholder="例如：海盐陶瓷杯"></label><label>SKU 编码<input name="code" required maxlength="40" pattern="[A-Z0-9_\-]{1,40}" placeholder="例如：MUG-001"><small>使用大写字母、数字、下划线或连字符。</small></label><label>销售单价（元）<input name="price" required type="number" min="0" max="999999.99" step="0.01" placeholder="0.00"></label><p class="form-error" id="sku-error" role="alert" hidden></p><div class="dialog-actions"><button type="button" class="button secondary" data-close="sku-dialog">取消</button><button type="submit" class="button primary">创建商品</button></div></form></dialog>
+<dialog id="receipt-dialog" aria-labelledby="receipt-dialog-title"><form id="receipt-form"><div class="dialog-heading"><div><p class="eyebrow">STOCK RECEIPT</p><h2 id="receipt-dialog-title">商品入库</h2></div><button type="button" class="text-button" data-close="receipt-dialog" aria-label="关闭商品入库">关闭</button></div><label>选择商品<select name="skuId" id="receipt-product" required></select></label><label>入库数量<input name="quantity" type="number" min="1" max="1000000" step="1" value="10" required></label><details class="advanced"><summary>操作标识与重复提交</summary><label>操作标识<input name="operationKey" id="receipt-key" readonly required maxlength="64"></label><p class="fine">重试本次入库时保留此标识，库存只增加一次。要追加库存，请使用“新一笔入库”。</p></details><p class="form-error" id="receipt-error" role="alert" hidden></p><div id="receipt-success" class="success-box" hidden></div><div class="dialog-actions"><button type="button" class="button secondary" id="receipt-reset" hidden>新一笔入库</button><button type="submit" class="button primary" id="receipt-submit">确认入库</button></div></form></dialog>
+<dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-dialog-title"><div class="dialog-heading"><div><p class="eyebrow">ORDER DETAILS</p><h2 id="detail-dialog-title">订单详情</h2></div><button type="button" class="text-button" data-close="detail-dialog" aria-label="关闭订单详情">关闭</button></div><div id="order-detail-content" aria-live="polite"></div></dialog>
+<dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-heading"><h2 id="help-title">如何使用 StockFlow</h2><button type="button" class="text-button" data-close="help-dialog">关闭</button></div><ol class="help-steps"><li><strong>以 warehouse 或 admin 登录</strong><p>在商品管理创建商品，在库存管理为商品入库。</p></li><li><strong>切换 buyer 登录</strong><p>在创建订单中选择商品和数量，提交后查看订单及服务端金额。</p></li><li><strong>体验安全重试与数据隔离</strong><p>重试本次下单会返回原订单；切换 buyer2 后，只能查询 buyer2 自己的订单。</p></li></ol><div class="notice">当前版本尚未提供订单确认、取消、自动释放预留或发货。</div></dialog>
+<template id="cart-line-template"><div class="cart-line"><label><span class="sr-only">商品</span><select class="cart-product" required></select></label><label><span class="sr-only">数量</span><input class="cart-quantity" type="number" min="1" max="99" step="1" value="1" required></label><span class="cart-subtotal number">—</span><button type="button" class="text-button remove-line" aria-label="移除此商品行">移除</button></div></template>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<noscript><p>请启用 JavaScript 后使用此工作台。</p></noscript>
+</body></html>

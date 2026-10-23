@@ -26,10 +26,9 @@ public class SecurityConfiguration {
     @Bean SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
         return http.csrf(c->c.disable())
             .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(a->a.requestMatchers("/","/index.html","/app.js","/styles.css","/api/health","/error").permitAll().anyRequest().authenticated())
+            .authorizeHttpRequests(a->a.requestMatchers("/","/index.html","/app.js","/styles.css","/ui-model.mjs","/api-client.mjs","/api/health","/error").permitAll().anyRequest().authenticated())
             .httpBasic(b->b.authenticationEntryPoint((r,s,e)->ApiErrors.writeSecurity(r,s,401)))
             .exceptionHandling(e->e.accessDeniedHandler((r,s,x)->ApiErrors.writeSecurity(r,s,403)))
             .build();
     }
 }
-

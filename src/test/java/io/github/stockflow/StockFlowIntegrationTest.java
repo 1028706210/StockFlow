@@ -58,6 +58,17 @@ class StockFlowIntegrationTest {
     }
     long count(String table){return jdbc.queryForObject("SELECT COUNT(*) FROM "+table,Long.class);}
 
+    @Test void workbenchAssetsArePublicAndTheModuleHasAJavaScriptMimeType() throws Exception {
+        for (var path : List.of("/", "/app.js", "/styles.css", "/ui-model.mjs", "/api-client.mjs")) {
+            var response=client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+path)).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+            assertEquals(200,response.statusCode(),path+" must be public so login can initialize");
+            if(path.endsWith(".mjs")) {
+                assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("javascript"));
+                assertFalse(response.body().isBlank());
+            }
+        }
+    }
     @Test void rejectsAnonymousAndExposesARequestId() throws Exception {
         var r=request(null,"GET","/api/skus",null);
         assertEquals(401,r.status());

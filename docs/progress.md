@@ -45,3 +45,28 @@ Directory: artifacts/p0-reviewed/ (ignored, retained locally).
 - CI workflow exists but has not been run remotely.
 
 Private credentials, database files, build output and evidence are ignored by Git. Only StockFlow source, tests and handoff documentation are committed. The original course frontend, backend and database were not modified.
+
+## 2026-10-23 frontend workbench upgrade
+
+Authorization: user approved the proposed frontend work and requested a UI plugin, then requested continuation. Bounded upgrade of existing frontend resources; no framework migration, schema changes or P1 endpoints.
+Plugin: Product Design index/get-context/critical-overrides/design-qa guidance; inspected existing code and browser baseline. No saved Product Design context existed. Existing code/captured screen was the design target, so no new prototype template or generated asset was required.
+Design: retain green palette; add role navigation, latest100 client-paginated tables, modal product/receipt operations, graphical cart, server-backed order detail and responsive layouts. No decorative trend data.
+Files: static index.html/styles.css/app.js/ui-model.mjs/api-client.mjs; three Node test files; exact public module routes; one Java asset regression; CI frontend test step; README and QA records/screenshots.
+
+Verification:
+- Initial model RED: 10 assertion failures; GREEN: 10 tests passed.
+- Static module RED: 1 failure among 23 Java tests (module returned401); exact module paths now public with JavaScript MIME types. Final Java suite:23 passed,0 failures/errors/skips.
+- Independent review:3 Important issues found (body-read account race, in-flight attempt reset, stale detail response). Six regressions failed with guards removed and passed after fixes. An initial VM harness was missing document.addEventListener; that harness error is retained but is not claimed as a valid behavioral RED. Corrected evidence: red-races-fixture-corrected.log.
+- Minor review findings fixed in scope: displayed SF-order-number search, skip link route preservation, closed mobile sidebar focus exclusion and Escape focus restoration.
+- Final acceptance found that a confirmed receipt could reopen the prior SKU when another product was selected. One RED regression reproduced it; the fix resets confirmed operations while preserving unconfirmed attempts. Two added tests cover both cases.
+- Final frontend suite:19 passed,0 failures/skips. Node syntax checks pass.
+- Final package:artifacts/ui-20261023/package-final.log,BUILD SUCCESS. Earlier packaging failure was a Windows JAR file lock from the old StockFlow Java launcher/child; only those verified processes were stopped.
+- Browser using actual final JAR and MySQL: invalid login feedback; warehouse product creation;9-product table search/page2;low-stock filter;receipt24 and original-operation replay still24;buyer two-product order SF-3=173.30;replay same SF-3;detail quantities/prices;SF-3 search;buyer2 empty orders;390px viewport and document width both390;menu open/Escape close;skip-link keeps #orders and focuses main-content.
+- Final receipt-reopen browser regression: confirmed1 additional unit of the cup, closed modal, selected cable row; new modal correctly selected the cable with fresh editable inputs.
+- Browser error/warn logs after final reload and flows: empty. No all-browser compatibility, formal assistive-technology certification, or live weak-network browser emulation claimed; asynchronous races are covered by Node tests.
+- Screenshots:docs/screenshots and artifacts/ui-20261023. Detailed visual review:design-qa.md.
+- CI includes frontend tests via actions/setup-node@v7 with Node24 (official setup-node documentation checked); no remote execution claimed.
+
+Review rulings: source review did not judge live appearance/focus, so browser evidence above supplies the bounded visual/keyboard pass. Backend correctness is covered by the23-test real MySQL suite; hosted CI remains unrun. P1/P2, all-history pagination, inactive-product administration and historical product-name snapshots remain outside this upgrade; no such controls are advertised. Production deployment, security audit and broad browser compatibility are not claimed.
+
+The existing P0 deferred HTTP405/415 mapping and Maven resolution script findings remain recorded above. No course project files or credentials were used. Synthetic demo products/orders were added only to stockflow_dev for acceptance.
