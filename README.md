@@ -86,6 +86,8 @@ Java 17、Spring Boot 4.1.0、Spring Security、Bean Validation、MyBatis 4.1.0�
 
 ## 前端工作台
 
+本轮视觉优化已落地：深绿导航与登录页、14px 表格正文、至少 12px 的辅助文字。提供 [Figma 可编辑页面](https://www.figma.com/design/OVp7EQbg2Dt7RwRphNCWJz?node-id=3-203)、[Canva 草案](https://canva.link/7sbb7attc1fboz8) 和 [设计说明](docs/UI-DESIGN.md)。本地实现使用系统字体，Figma 使用 Noto Sans SC，字体渲染不作像素级一致声明。
+
 ![StockFlow 工作台](docs/screenshots/workbench.png)
 
 - 工作概览按角色显示本次加载数据的指标，不使用模拟趋势或全库统计。
@@ -94,7 +96,7 @@ Java 17、Spring Boot 4.1.0、Spring Security、Bean Validation、MyBatis 4.1.0�
 - 请求重试保留原标识；账号切换清空旧数据；旧详情响应不会覆盖新详情。
 - 提供空数据、加载、错误和成功状态；移动端支持折叠菜单、表格区域内滚动和单列下单布局。
 
-[图形化下单截图](docs/screenshots/create-order.png) · [移动端截图](docs/screenshots/mobile-order.png) · [UI 验收记录](design-qa.md)
+[登录页截图](docs/screenshots/login.png) · [图形化下单截图](docs/screenshots/create-order.png) · [移动端截图](docs/screenshots/mobile-order.png) · [UI 验收记录](design-qa.md)
 
 前端不需要构建即可运行。开发行为测试需要 Node.js 24：
 

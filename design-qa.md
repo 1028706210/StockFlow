@@ -1,5 +1,20 @@
 # StockFlow UI verification
 
+## 2026-10-23 Canva / Figma visual polish
+
+Latest visual sources: [Figma overview](https://www.figma.com/design/OVp7EQbg2Dt7RwRphNCWJz?node-id=3-203), [Figma login](https://www.figma.com/design/OVp7EQbg2Dt7RwRphNCWJz?node-id=3-342), and [Canva draft](https://canva.link/7sbb7attc1fboz8). Canva text was verified; its remote thumbnail was blank and is not claimed as a visually validated source.
+
+Scope: stylesheet presentation, embedded favicon, screenshots and design documentation. Business JavaScript, Java and database schema are unchanged. Editable Figma screens contain native layers, seven component instances, Noto Sans SC text and no image-filled nodes.
+
+Fresh validation: 19 frontend tests passed; 23 Java tests (including 17 real HTTP/MySQL integration cases) passed; Maven package succeeded. Final Edge headless check covered 1440x960 login/overview/inventory/order draft and 390x844 cart/orders, visible overview text >=12px, table cells 14px, receipt dialog fit, navigation Escape behavior and buyer2 empty orders. Browser evidence is in ignored artifacts/ui-canva-figma-20261023/browser-validation.json.
+
+The browser draft check used existing synthetic products and did not submit business writes. The first console pass exposed unauthorized default favicon requests; an embedded SF favicon repaired the source. The final pass checks console errors again. This is one browser engine and two viewport sizes, not a formal accessibility certification or hosted CI run.
+
+Current browser captures: docs/screenshots/login.png, workbench.png, create-order.png, mobile-order.png. Figma export previews and state ledger are preserved under ignored artifacts/ui-canva-figma-20261023. Original implementation evidence below describes the earlier behavioral acceptance and is retained as history.
+
+## Earlier workbench implementation record
+
+
 Date: 2026-10-23 (Asia/Taipei). Scope: existing StockFlow frontend upgrade requested by the user.
 final result: passed
 
