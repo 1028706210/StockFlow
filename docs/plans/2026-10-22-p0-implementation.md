@@ -33,27 +33,27 @@
 
 Files: pom.xml, order/OrderLines.java, order/OrderLinesTest.java.
 Produces: normalize(List<Line>) and fingerprint(List<Line>).
-- [ ] Write real JUnit tests for sorted merging, 99-unit boundary, 10-SKU boundary, invalid IDs and stable fingerprints.
-- [ ] Run the tests against a minimal stub and observe assertion failures.
-- [ ] Implement normalization and SHA-256 fingerprinting; rerun the whole available suite.
+- [x] Write real JUnit tests for sorted merging, 99-unit boundary, 10-SKU boundary, invalid IDs and stable fingerprints.
+- [x] Run the tests against a minimal stub and observe assertion failures.
+- [x] Implement normalization and SHA-256 fingerprinting; rerun the whole available suite.
 
 ## Task 2 — MySQL, authenticated API and transactional business
 
 Files: StockFlowApplication; api error handling/request IDs; auth configuration; catalog, inventory and order mappers/services/controllers; schema.sql; application properties; local MySQL helper; StockFlowIntegrationTest.
 Consumes: normalized lines and fingerprint from Task 1.
 Produces: /api/auth/me, /api/skus, /api/inventory, /api/inventory/{skuId}/receipts, /api/orders and /api/orders/{id}.
-- [ ] Start a fresh isolated MySQL instance and generate private credentials.
-- [ ] Write integration tests using real HTTP and MySQL. Run them against the initially missing routes to establish RED.
-- [ ] Implement role/resource authorization, SKU creation, bounded/idempotent inbound receipts, order atomic reservation and post-rollback duplicate recovery.
-- [ ] Run real 100-request/stock-10 and 50-request/same-key tests, rollback, validation, ownership and inventory-ledger assertions.
-- [ ] Run the full test suite and package the application.
+- [x] Start a fresh isolated MySQL instance and generate private credentials.
+- [x] Write integration tests using real HTTP and MySQL. Run them against the initially missing routes to establish RED.
+- [x] Implement role/resource authorization, SKU creation, bounded/idempotent inbound receipts, order atomic reservation and post-rollback duplicate recovery.
+- [x] Run real 100-request/stock-10 and 50-request/same-key tests, rollback, validation, ownership and inventory-ledger assertions.
+- [x] Run the full test suite and package the application.
 
 ## Task 3 — usable local handoff
 
 Files: README, HTTP examples, minimal static API demo, CI workflow and local run script.
-- [ ] Document exact environment setup, generated demo credentials, independent DB boundaries and P0 exclusions.
-- [ ] Verify startup of the packaged JAR and perform authenticated HTTP smoke checks.
-- [ ] Run a fresh review of the complete implementation and fix important findings with regression tests.
-- [ ] Commit only this repository's files and record exact validation evidence.
+- [x] Document exact environment setup, generated demo credentials, independent DB boundaries and P0 exclusions.
+- [x] Verify startup of the packaged JAR and perform authenticated HTTP smoke checks.
+- [x] Run a fresh review of the complete implementation and fix important findings with regression tests.
+- [x] Commit only this repository's files and record exact validation evidence.
 
 The plan intentionally does not claim implementation of P1/P2/P3. Continuous integration and local run support begin now; full deployment/benchmark deliverables remain subsequent phases.

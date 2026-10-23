@@ -88,6 +88,14 @@ Java 17、Spring Boot 4.1.0、Spring Security、Bean Validation、MyBatis 4.1.0�
 
 `mvn test` 运行规范化测试和独立 MySQL 集成测试。集成测试使用实际 HTTP、事务、唯一约束和库存条件更新，不以 H2 或 mock 替代数据库行为。
 
+
+
+本地已验证：**22 项测试通过**（6 项规范化测试、16 项真实 HTTP/MySQL 集成测试），失败、错误和跳过均为 0。并发场景包含 100 请求争抢 10 件库存，以及 50 个相同请求键并发重放。它们验证正确性，不是吞吐量基准。
+
+评审补充了小数数量、小数 SKU ID 的三项回归测试：修复前均被错误接受，修复后返回 400 且不产生库存或流水变更。已启动最终打包的 JAR，验证页面资源、认证、正常下单、请求重放和买家隔离；尚未进行浏览器交互验收，GitHub Actions 尚未在线执行。
+
+本机详细证据位于忽略提交的 `artifacts/p0-reviewed/`，包括 `package.log`、`runtime-smoke.json` 和回归失败日志。跟踪的 [执行与验证记录](docs/progress.md) 保留验证结论及剩余事项。
+
 GitHub Actions 工作流配置了临时 MySQL 服务和构建测试，但只有上传仓库并实际执行后才能声称 CI 通过。CI 配置中的口令是一次性任务环境的示例，不是本机凭据。
 
 - [设计稿](docs/specs/2026-10-22-stockflow-design.md)

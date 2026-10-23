@@ -134,6 +134,27 @@ class StockFlowIntegrationTest {
         assertEquals(409,changed.status());
         assertEquals(10,jdbc.queryForObject("SELECT on_hand FROM inventory",Long.class));assertEquals(1,count("inventory_ledger"));
     }
+    @Test void fractionalOrderQuantityIsRejectedWithoutAnyReservation() throws Exception {
+        long id=sku("A","2");receipt(id,10,"in");
+        var r=request("buyer","POST","/api/orders","{\"requestKey\":\"fraction-qty\",\"items\":[{\"skuId\":"+id+",\"quantity\":1.9}]}");
+        assertEquals(400,r.status());assertEquals("INVALID_REQUEST",r.body().path("code").asText());
+        assertEquals(0,count("customer_order"));assertEquals(0,count("order_item"));
+        assertEquals(0,jdbc.queryForObject("SELECT reserved FROM inventory",Long.class));
+        assertEquals(1,count("inventory_ledger"));
+    }
+    @Test void fractionalSkuIdIsRejectedInsteadOfTargetingAnotherSku() throws Exception {
+        long id=sku("A","2");receipt(id,10,"in");
+        var r=request("buyer","POST","/api/orders","{\"requestKey\":\"fraction-id\",\"items\":[{\"skuId\":"+id+".9,\"quantity\":1}]}");
+        assertEquals(400,r.status());assertEquals("INVALID_REQUEST",r.body().path("code").asText());
+        assertEquals(0,count("customer_order"));assertEquals(0,jdbc.queryForObject("SELECT reserved FROM inventory",Long.class));
+        assertEquals(1,count("inventory_ledger"));
+    }
+    @Test void fractionalReceiptQuantityIsRejectedWithoutStockOrLedgerChanges() throws Exception {
+        long id=sku("A","2");
+        var r=request("warehouse","POST","/api/inventory/"+id+"/receipts","{\"operationKey\":\"fraction-receipt\",\"quantity\":10.9}");
+        assertEquals(400,r.status());assertEquals("INVALID_REQUEST",r.body().path("code").asText());
+        assertEquals(0,jdbc.queryForObject("SELECT on_hand FROM inventory",Long.class));assertEquals(0,count("inventory_ledger"));
+    }
     @Test void oneHundredCompetingRequestsCannotOversellTenUnits() throws Exception {
         long id=sku("A","2");receipt(id,10,"in");
         var pool=Executors.newFixedThreadPool(32);
@@ -169,4 +190,3 @@ class StockFlowIntegrationTest {
         }finally{pool.shutdownNow();}
     }
 }
-
