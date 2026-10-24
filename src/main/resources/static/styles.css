@@ -1395,9 +1395,78 @@ dialog small {
     font-size:12px;
   }
 }
+/* Pointer hover feedback */
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+  .button,.pagination button {
+    transition:background .18s ease,border-color .18s ease,box-shadow .2s ease,transform .2s ease;
+  }
+  .button:not(:disabled):hover,.pagination button:not(:disabled):hover {
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px #174b3f18;
+  }
+  .button.primary:not(:disabled):hover {
+    box-shadow:0 7px 20px #174b3f30;
+  }
+  .metric {
+    transition:transform .24s ease,box-shadow .24s ease,border-color .2s ease;
+  }
+  .metric:hover {
+    transform:translateY(-4px);
+    border-color:#91b5a5;
+    box-shadow:0 10px 24px #174b3f12;
+  }
+  .metric.accent:hover {
+    border-color:var(--brand);
+    box-shadow:0 10px 24px #174b3f26;
+  }
+  .sidebar nav a {
+    transition:background .18s ease,transform .2s ease;
+  }
+  .sidebar nav a:hover {
+    transform:translateX(3px);
+  }
+  .brand-mark {
+    transition:transform .24s ease,box-shadow .24s ease;
+  }
+  .brand:hover .brand-mark {
+    transform:scale(1.06);
+    box-shadow:0 4px 14px #102e2920;
+  }
+  tbody tr {
+    transition:background .18s ease;
+  }
+  input,select {
+    transition:border-color .18s ease,box-shadow .18s ease;
+  }
+  input:not([readonly]):not(:disabled):hover,select:not(:disabled):hover {
+    border-color:#7fa893;
+    box-shadow:0 0 0 3px #246b590a;
+  }
+  .journey li {
+    transition:transform .24s ease;
+  }
+  .journey li>span {
+    transition:background .2s ease,border-color .2s ease;
+  }
+  .journey li:hover {
+    transform:translateX(5px);
+  }
+  .journey li:hover>span {
+    background:#ffffff16;
+    border-color:#c5ded1;
+  }
+}
 @media(prefers-reduced-motion:reduce) {
   * {
     transition:none!important;
     scroll-behavior:auto!important;
   }
 }
+
+.auth-switch { margin-top:18px; }
+.login-card form label small { font-weight:400; }
+.login-card form[hidden] { display:none; }
+.login-card #register-form label { margin-bottom:16px; }
+.login-panel { min-width:0; }
+.cell-actions { flex-wrap:wrap; }
+.cell-actions .text-button { white-space:nowrap; }

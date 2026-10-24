@@ -1,123 +1,113 @@
 # StockFlow
 
-单仓库存与订单履约系统。面向 Java 后端学习和项目实践，先通过真实数据库验证事务、并发库存和请求幂等，再逐步完善履约及异步可靠性。
+单仓库存与订单履约系统，面向 Java 后端学习与实习项目展示。当前实现 **P1：持久化账号与订单履约闭环**，业务核心独立编写，未复制课程项目或使用课程数据库。
 
-当前阶段为 **P0：库存与订单创建**。代码是独立实现的业务项目，没有复制中州养老课程项目或复用它的数据库。
+## 已实现
 
-## 已实现范围
+- MySQL 账号持久化、买家注册、BCrypt 密码哈希、登录、会话恢复和退出失效。
+- Spring Security 服务端会话；浏览器使用 HttpOnly / SameSite=Lax Cookie，写入操作校验 CSRF。
+- 买家、仓管、管理员角色与订单资源归属校验。公开注册固定为 BUYER。
+- 商品创建与查询，库存查询，带操作键的幂等入库。
+- 多商品下单、规范化数量、服务端价格快照、请求内容指纹及幂等重放。
+- 下单预留、确认、取消释放、超时取消释放、仓管发货扣减、买家确认收货。
+- 订单状态、库存和流水在同一 MySQL 事务内更新；多 SKU 失败整体回滚。
+- 工作概览、商品/库存/本人订单/仓管履约列表、状态筛选和图形化下单。
+- 桌面鼠标悬停反馈与移动布局；尊重减少动态效果设置。
 
-- 本地演示身份：buyer、buyer2、warehouse、admin；标准 Spring Security HTTP Basic。
-- 商品创建与列表、库存查询、带操作键的幂等入库。
-- 订单创建、列表、详情和买家资源归属校验。
-- 合并重复 SKU、数量上限、服务端价格快照及请求内容指纹。
-- MySQL 事务内预留库存、写订单明细与库存流水；多 SKU 失败整笔回滚。
-- 同一买家同一请求键重放；内容改变返回冲突；失败事务结束后再读取原结果。
-- 带角色导航的管理工作台：业务表格、搜索分页、图形化下单和订单详情；真实 HTTP/MySQL 集成测试。
+当前没有接入真实支付、物流、找回密码、管理员用户维护、Redis、RabbitMQ 或 outbox。确认订单是模拟业务操作，不产生支付行为。
 
-确认、取消、超时回收、发货和完成属于 P1；Redis、RabbitMQ/outbox 属于 P2。目前没有实现这些后续能力，不能将它们列为已经完成的简历成果。
+## 技术与运行边界
 
-## 技术
+Java 17、Spring Boot 4.1.0、Spring Security、MyBatis 4.1.0、MySQL 8/InnoDB、Maven、JUnit。前端使用原生 ES Modules、HTML/CSS，随 JAR 提供，无需安装前端依赖。
 
-Java 17、Spring Boot 4.1.0、Spring Security、Bean Validation、MyBatis 4.1.0、MySQL 8/InnoDB、Maven、JUnit。采用一个后端进程，按业务包组织。前端采用原生 ES Modules、HTML 和 CSS，随 JAR 提供，无需单独安装前端依赖。
+这是本地学习/演示配置，仅监听 127.0.0.1。标准 HTTP Basic 保留给显式设置 Authorization 的本地 API 客户端与集成测试；此类请求豁免 CSRF，浏览器界面不发送 Basic 凭据。公网部署、HTTPS、限流和生产身份安全评审不属于本次交付。
 
-库存满足 `on_hand >= reserved >= 0`，可用量计算为 `on_hand - reserved`。下单金额来自数据库商品价格，浏览器不能指定买家、总额或订单状态。
+## Windows 启动与已有数据库升级
 
-## Windows 本地启动
-
-需要 **Java 17+、Maven 3.6.3+、MySQL Server 8 和 PowerShell 7**。下面的脚本使用已有 MySQL 程序启动一个独立实例，不安装或修改 Windows MySQL 服务。
-
-在项目根目录运行：
+需要 Java 17+、Maven 3.6.3+、MySQL Server 8、PowerShell 7。已有 P0 数据库也执行以下升级，不需要清库：
 
 ```powershell
-# 默认程序目录为 C:\Program Files\MySQL\MySQL Server 8.0；可通过 -MySqlHome 指定
 .\tools\Start-LocalDatabase.ps1
-
-# Maven 已在 PATH 或 MAVEN_HOME 中时无需 -Maven；也可显式传入 mvn.cmd
-.\tools\Invoke-Local.ps1 -Action test
+.\tools\Update-LocalDatabase.ps1
 .\tools\Invoke-Local.ps1 -Action package
 .\tools\Invoke-Local.ps1 -Action run
 ```
 
-打开 [本地演示页面](http://127.0.0.1:8082)。口令保存在 **.local/demo-login.txt**，只保存在当前机器，不提交 Git。
+Maven 未在 PATH / MAVEN_HOME 时，为 Invoke-Local.ps1 传入 -Maven 指定 mvn.cmd。数据库脚本使用独立 MySQL 目录与凭据，不修改原 Windows MySQL 服务。
 
-先使用 warehouse 创建商品并入库，再通过“切换账号”以 buyer 下单。下单页直接选择商品和数量；提交后点击“重试本次下单”返回同一订单，点击“开始另一笔订单”生成新的请求标识。入库也提供原操作重试和新一笔操作。
+打开 [本地工作台](http://127.0.0.1:8082)。演示账号 buyer、buyer2、warehouse、admin 的初始口令见本机 .local/demo-login.txt；注册账号使用自己设置的密码。登录会话在 30 分钟无活动后过期，退出会使当前会话立即失效。
 
-开发实例仅监听 127.0.0.1:3308；应用仅监听 127.0.0.1:8082。stockflow_dev 和 stockflow_test 使用不同数据库用户和随机口令，不使用课程库 zzyl10。
+升级脚本只操作 stockflow_dev / stockflow_test，增加 app_user 和订单 cancel_reason，保留原商品、订单及演示用户 ID 1–4。新用户编号从 100 起分配；重启只插入缺失演示账号，不覆盖已有密码。SQL 位于 [V002 升级文件](db/migrations/V002__accounts_and_fulfillment.sql)；其他环境需要先审阅并应用对应升级。
 
-停止应用使用所在终端的 Ctrl+C。停止独立数据库：
+开发数据库：127.0.0.1:3308 / stockflow_dev；测试数据库：同实例的 stockflow_test，使用不同数据库用户与密码。课程库 zzyl10 没有参与升级。
 
-```powershell
-.\tools\Invoke-Local.ps1 -Action stop-db
-```
+测试会清理 stockflow_test 的业务表，并在清理前检查实际数据库名。不要把测试环境指向业务库。口令、数据库目录、构建文件和本机证据目录均由 Git 忽略。
 
-## 其他环境
+## 体验完整流程
 
-通过环境变量配置数据库，使用专门为 StockFlow 建立的空数据库：
+1. 用 warehouse 登录，创建商品并入库。
+2. 退出后，用已注册买家或 buyer 登录；选择商品下单。
+3. 在“我的订单”确认订单；待确认时也可取消，取消会释放预留。
+4. 用 warehouse 登录，在“订单履约”筛选待发货订单，确认发货。
+5. 买家再次登录，在“我的订单”确认收货，订单变为已完成。
 
-| 变量 | 用途 |
-|---|---|
-| STOCKFLOW_DB_URL / STOCKFLOW_DB_USERNAME / STOCKFLOW_DB_PASSWORD | 开发运行库 |
-| STOCKFLOW_TEST_DB_URL / STOCKFLOW_TEST_DB_USERNAME / STOCKFLOW_TEST_DB_PASSWORD | 独立测试库 |
-| STOCKFLOW_DEMO_PASSWORD | 至少 12 字符的本地演示口令 |
+订单有 15 分钟确认期限。超时任务每 30 秒检查一批、每批最多处理 100 单；到期订单自动取消并释放预留。失败订单会在后续扫描重试，跨批次游标保证它们不会永久阻挡后续正常订单。
 
-测试会清理 **stockflow_test** 的业务表，并在清理前检查实际数据库名；禁止把测试配置指向业务库。schema.sql 只负责此初始版本的建表，不会替已有表执行自动升级；后续结构变更需添加正式迁移。
+| 状态操作 | 结果 | 库存变化 |
+|---|---|---|
+| 创建订单 | 待确认 | reserved 增加 |
+| 买家确认 | 已确认 | 无 |
+| 买家取消 / 待确认超时 | 已取消 | reserved 减少 |
+| 仓管发货 | 已发货 | on_hand 与 reserved 同时减少 |
+| 买家确认收货 | 已完成 | 无 |
 
-四个演示用户仅用于 local/test 环境，账号 ID 固定，用于资源归属校验。HTTP Basic 不是公网部署方案；公开部署前需要正式用户管理、身份认证、HTTPS 和部署安全评审。
+库存始终满足 on_hand >= reserved >= 0。确认后的订单不开放取消；支付退款与售后不在范围内。同一成功操作重试返回当前结果，不重复改动库存。
 
 ## API
 
-| 请求 | 权限 | 说明 |
-|---|---|---|
-| GET /api/health | 无 | 进程存活状态，不是数据库健康检查 |
-| GET /api/auth/me | 已登录 | 当前演示身份 |
-| GET /api/skus | 已登录 | 最近 100 个商品 |
-| POST /api/skus | warehouse/admin | 创建商品，返回 201 |
-| GET /api/inventory | warehouse/admin | 最近 100 条库存 |
-| POST /api/inventory/{skuId}/receipts | warehouse/admin | 幂等入库 |
-| POST /api/orders | buyer/buyer2 | 新订单 201，原请求重放 200 |
-| GET /api/orders | buyer/buyer2 | 最近 100 笔本人订单 |
-| GET /api/orders/{id} | 所属买家 | 详情；他人订单返回 404 |
+| 请求 | 用途 |
+|---|---|
+| GET /api/health | 进程存活与阶段，不代表数据库健康 |
+| GET /api/auth/csrf | 取得 CSRF token/headerName |
+| POST /api/auth/register | JSON 买家注册，201，不自动登录 |
+| POST /api/auth/login | 表单编码登录，200，创建/轮换会话 |
+| GET /api/auth/me | 当前身份，匿名 401 |
+| POST /api/auth/logout | 带 CSRF 退出，204 |
+| GET / POST /api/skus | 查询 / 仓管创建商品 |
+| GET /api/inventory | 仓管查询库存 |
+| POST /api/inventory/{skuId}/receipts | 仓管幂等入库 |
+| GET / POST /api/orders | 本人订单列表 / 幂等创建 |
+| GET /api/orders/{id} | 本人订单详情 |
+| POST /api/orders/{id}/confirm | 本人确认 |
+| POST /api/orders/{id}/cancel | 本人取消 |
+| POST /api/orders/{id}/complete | 本人确认收货 |
+| GET /api/fulfillment/orders | 仓管/管理员订单列表 |
+| GET /api/fulfillment/orders/{id} | 仓管/管理员订单详情 |
+| POST /api/fulfillment/orders/{id}/ship | 仓管/管理员发货 |
 
-操作键和请求键最多 64 字符，使用字母、数字、点、下划线、冒号和连字符。每单最多 10 种 SKU，合并后的单 SKU 数量为 1–99。
+浏览器会话下所有写入请求均带 X-CSRF-TOKEN。用户、角色、价格、总额、库存余额和订单状态由服务端确定，前端不能直接指定。买家访问他人订单返回 404；缺少角色返回 403；状态/库存冲突返回 409；字段非法返回 400。错误带 requestId，不返回堆栈或 SQL。
 
-错误包含 code、message、requestId；X-Request-Id 响应头可用于关联问题。不向客户端返回堆栈或 SQL。
+注册账号为 3–32 位小写字母/数字/下划线，以字母开头。密码为 8–64 个字符，BCrypt 输入最多 72 个 UTF-8 字节；仅保存哈希。
+每单最多 10 种 SKU，同一 SKU 合并后数量为 1–99。金额由数据库商品价格快照计算。
 
-可导入 [IntelliJ HTTP 示例](examples/stockflow.http)；不要将真实口令写入公开示例。
+[IntelliJ HTTP 示例](examples/stockflow.http) 使用本地 Basic 凭据变量，不在文件内保存真实口令。
 
-## 前端工作台
-
-本轮视觉优化已落地：深绿导航与登录页、14px 表格正文、至少 12px 的辅助文字。提供 [Figma 可编辑页面](https://www.figma.com/design/OVp7EQbg2Dt7RwRphNCWJz?node-id=3-203)、[Canva 草案](https://canva.link/7sbb7attc1fboz8) 和 [设计说明](docs/UI-DESIGN.md)。本地实现使用系统字体，Figma 使用 Noto Sans SC，字体渲染不作像素级一致声明。
+## 界面与验证
 
 ![StockFlow 工作台](docs/screenshots/workbench.png)
 
-- 工作概览按角色显示本次加载数据的指标，不使用模拟趋势或全库统计。
-- 商品与库存表格支持名称/编码搜索、库存状态筛选及本地分页；仓管可通过弹窗创建商品与入库。
-- 买家直接选择商品与数量下单，金额按整数分预览，最终以服务端价格快照为准。
-- 请求重试保留原标识；账号切换清空旧数据；旧详情响应不会覆盖新详情。
-- 提供空数据、加载、错误和成功状态；移动端支持折叠菜单、表格区域内滚动和单列下单布局。
+[登录](docs/screenshots/login.png) · [注册](docs/screenshots/register.png) · [订单履约](docs/screenshots/fulfillment.png) · [本人订单](docs/screenshots/orders.png) · [下单](docs/screenshots/create-order.png) · [移动端](docs/screenshots/mobile-order.png)
 
-[登录页截图](docs/screenshots/login.png) · [图形化下单截图](docs/screenshots/create-order.png) · [移动端截图](docs/screenshots/mobile-order.png) · [UI 验收记录](design-qa.md)
+鼠标停留时，按钮轻微抬升、指标卡增加阴影、导航轻微平移、输入框边框渐变。动画仅对精细鼠标且未要求减少动态效果的设备启用。
 
-前端不需要构建即可运行。开发行为测试需要 Node.js 24：
+列表仅展示最近 100 条，页面内每页 8 条；指标来自当前加载数据，不是全库统计或营收统计。状态操作以服务端响应为准。
 
 ```powershell
 node --test src/test/frontend/*.test.mjs
+.\tools\Invoke-Local.ps1 -Action test
 ```
 
-## 验证与交付
+当前自动化验证：**37 项 Java/MySQL 测试、31 项前端测试通过，项目打包成功**；真实浏览器已走通账号与订单流程、定时到期释放和悬停动画。详细记录见 [执行记录](docs/progress.md) 与 [UI 验收](design-qa.md)。真实 MySQL 测试覆盖事务、并发库存、请求幂等、注册唯一性、会话/CSRF、状态竞争、重复操作、超时释放及失败回滚。测试通过只代表相应范围，不是吞吐量基准或生产认证。
+本机证据位于 artifacts/p1-20261024（忽略提交）；GitHub Actions 配置存在，尚未声称远程执行成功。
 
-`mvn test` 运行规范化测试和独立 MySQL 集成测试。集成测试使用实际 HTTP、事务、唯一约束和库存条件更新，不以 H2 或 mock 替代数据库行为。
-
-本地已验证：**23 项后端测试通过**（6 项规范化测试、17 项真实 HTTP/MySQL 集成测试），另有 **19 项前端测试通过**，失败、错误和跳过均为 0。并发场景包含 100 请求争抢 10 件库存，以及 50 个相同请求键并发重放。它们验证正确性，不是吞吐量基准。
-
-评审补充了小数数量、小数 SKU ID 的三项回归测试：修复前均被错误接受，修复后返回 400 且不产生库存或流水变更。已启动最终打包的 JAR，验证页面资源、认证、正常下单、请求重放和买家隔离；已在内置浏览器完成桌面与 390 像素移动宽度的核心交互验收。GitHub Actions 尚未在线执行。
-
-后端初始证据位于 `artifacts/p0-reviewed/`；本次前端升级证据位于 `artifacts/ui-20261023/`，包括最终打包、前端测试和截图。这些目录忽略提交。跟踪的 [执行与验证记录](docs/progress.md) 保留验证结论及剩余事项。
-
-GitHub Actions 工作流配置了临时 MySQL 服务和构建测试，但只有上传仓库并实际执行后才能声称 CI 通过。CI 配置中的口令是一次性任务环境的示例，不是本机凭据。
-
-- [设计稿](docs/specs/2026-10-22-stockflow-design.md)
-- [P0 实施计划](docs/plans/2026-10-22-p0-implementation.md)
-- [执行与验证记录](docs/progress.md)
-
-目前列表有明确的 100 条上限，页面内按每页 8 条分页；全库游标分页、P1 履约操作、部署和基准报告留在后续迭代。
+[Figma/Canva 设计来源](docs/UI-DESIGN.md) · [初始业务设计](docs/specs/2026-10-22-stockflow-design.md) · [本轮设计](docs/specs/2026-10-23-account-fulfillment-design.md) · [本轮实施计划](docs/plans/2026-10-23-account-fulfillment.md)

@@ -70,3 +70,29 @@ Verification:
 Review rulings: source review did not judge live appearance/focus, so browser evidence above supplies the bounded visual/keyboard pass. Backend correctness is covered by the23-test real MySQL suite; hosted CI remains unrun. P1/P2, all-history pagination, inactive-product administration and historical product-name snapshots remain outside this upgrade; no such controls are advertised. Production deployment, security audit and broad browser compatibility are not claimed.
 
 The existing P0 deferred HTTP405/415 mapping and Maven resolution script findings remain recorded above. No course project files or credentials were used. Synthetic demo products/orders were added only to stockflow_dev for acceptance.
+
+## 2026-10-24 persisted identity, P1 lifecycle and hover
+
+Authorization: user explicitly selected all three scopes (login/registration/logout, fulfillment and mouse hover), then continued after the interrupted turn. Plan: docs/plans/2026-10-23-account-fulfillment.md; spec: docs/specs/2026-10-23-account-fulfillment-design.md. Changes remain in D:/project/StockFlow on the existing codex branch.
+
+Schema: app_user added with BCrypt hash, unique lowercase username, fixed role and enabled flag; new user IDs start at100. Existing demo IDs1..4 are preserved and seeded only if missing. customer_order.cancel_reason added with an idempotent upgrade; stockflow_dev/test were upgraded, P0 product/order data retained. An initial script error used a literal PowerShell backslash-n; the actual failed upgrade was preserved and fixed to a real newline before verifying both schemas. No course database was used.
+
+Identity: standard Spring Security form-login session, rotation on authentication, HttpOnly/SameSite Lax cookie,30min inactivity timeout and server invalidation on logout. GET CSRF plus protected Cookie writes, fixed BUYER public registration, actual persisted IDs and hashed password, duplicate/concurrent username protection. Explicit Basic remains for local API examples/tests; browser uses Cookie/CSRF. The 30min timeout is configured, not established by waiting30min; invalid/expired-like cookies and replay after real logout were tested.
+
+P1: owned buyer confirm/cancel/complete and warehouse fulfillment list/detail/ship; transaction locks order then visits SKU in ascending order; release and ship are conditional inventory updates plus ledger in the same transaction. Confirmation checks DB time. Default scheduled expiration runs every30sec with at most100 candidates. Failed candidates advance a keyset cursor and are retried after wrap.
+
+Tests and fixes:
+- Before production changes,13 new HTTP/MySQL tests failed for missing capabilities,0 initialization errors (artifacts/p1-20261024/red-http.log).
+- New frontend request/state tests initially failed, then Cookie/CSRF/form encoding/204/state-action rules passed.
+- Two initial Java assertions were corrected: compare JSON money numerically, and expect403 for missing-CSRF anonymous writes while authenticated-resource reads remain401.
+- Independent source review found starvation behind100 failed expiry candidates. A real MySQL100-bad-plus101st-healthy regression failed; the rotating bounded cursor fixed it. Targeted re-review found no new important issue.
+- Browser acceptance exposed the Spring authentication-factor authority in the public business roles. HTTP login/me regressions failed before filtering only ROLE_ for output; the internal SecurityContext remains unchanged.
+- A registration concurrency fixture initially raced first CSRF generation after login; prewarming one token isolates the actual unique-key race without weakening production CSRF or test201/409 expectations.
+- Final Java/MySQL suite37 passed (6 auth,8 fulfillment,6 normalization,17 original integration),0 failures/errors/skips. Final frontend suite31 passed. Executable JAR package succeeded.
+- Review/runtime evidence: red-review-regressions.log, package-final.log, browser-validation.json and runtime-final.log under ignored artifacts/p1-20261024.
+
+Browser acceptance uses actual packaged JAR, Edge and native MySQL. It creates only dedicated synthetic buyers/products/orders. Existing P0 pending orders are retained and naturally become EXPIRED cancellations. Synthetic expiry confirmation shortens only the new test order deadline, then waits for the actual scheduler. Test harness correction: async waitForFunction returned before the predicate result; replaced by explicit awaited polling of the API. Earlier failed runs are not claimed as acceptance.
+
+Screenshots updated for login/register/workbench/fulfillment/own orders/cart/mobile. Mouse hover uses fine-pointer CSS transitions for buttons/cards/navigation/inputs/login steps; reduced-motion suppresses movement. This is one browser engine and bounded desktop/mobile coverage, not formal accessibility certification or hosted CI.
+
+Remaining boundaries: real payments/logistics, password recovery, administrative account maintenance, Redis/MQ/outbox, all-history server pagination, broad browser coverage and production deployment/security review are not delivered. Public registration grants no warehouse/admin privilege. P0 historical evidence above remains a record of its original implementation, not a statement that P1 is still missing.

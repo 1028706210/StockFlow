@@ -23,4 +23,7 @@ public class OrderController {
     }
     @GetMapping public List<Summary> list(Authentication auth){return service.list(Actor.id(auth));}
     @GetMapping("/{id}") public View get(Authentication auth,@PathVariable @Positive long id){return service.get(Actor.id(auth),id);}
+    @PostMapping("/{id}/confirm") public View confirm(Authentication auth,@PathVariable @Positive long id){return service.confirm(Actor.id(auth),id);}
+    @PostMapping("/{id}/cancel") public View cancel(Authentication auth,@PathVariable @Positive long id){return service.cancel(Actor.id(auth),id);}
+    @PostMapping("/{id}/complete") public View complete(Authentication auth,@PathVariable @Positive long id){return service.complete(Actor.id(auth),id);}
 }

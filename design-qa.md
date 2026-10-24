@@ -1,5 +1,18 @@
 # StockFlow UI verification
 
+## 2026-10-24 account, fulfillment and mouse-hover acceptance
+
+Latest implementation includes a username login, buyer registration form, server logout, session restoration, buyer order state controls and warehouse fulfillment table. The older Figma/Canva files remain the2026-10-23 visual reference and have not been updated to represent every P1 control.
+
+Final checks use the actual executable JAR, native MySQL and headless Edge: registration creates a persisted BUYER; login cookie is HttpOnly/Lax; reload restores session; logout invalidates the saved cookie; create/cancel returns reserved stock; create/confirm/ship/complete decrements on_hand/reserved correctly; a dedicated synthetic expired order is cancelled by the real scheduled task. No real payment or logistics service is involved.
+
+Hover was measured, not inferred from static screenshots: card transitions through a4px lift with0.24s timing; reduced-motion disables its transform. Mobile390x844 orders/login have equal document/client width, and navigation still supports Escape. Full desktop views1440x960 include login/register/fulfillment. Screenshots are in docs/screenshots; before/after hover and structured acceptance are in artifacts/p1-20261024.
+
+Automated checks:31 frontend tests,37 Java/MySQL tests, package success. Independent code review and the expiry-starvation fix are recorded in docs/progress.md. Expected anonymous session-restoration401 responses are excluded from unexpected HTTP failures; the acceptance report separately asserts no browser page errors or unexpected HTTP failures.
+
+Limits: one Edge engine, two main viewport sizes and synthetic acceptance data; no30min real-time idle wait, formal screen-reader certification or remote CI run. Prior verification sections below are retained as history.
+
+
 ## 2026-10-23 Canva / Figma visual polish
 
 Latest visual sources: [Figma overview](https://www.figma.com/design/OVp7EQbg2Dt7RwRphNCWJz?node-id=3-203), [Figma login](https://www.figma.com/design/OVp7EQbg2Dt7RwRphNCWJz?node-id=3-342), and [Canva draft](https://canva.link/7sbb7attc1fboz8). Canva text was verified; its remote thumbnail was blank and is not claimed as a visually validated source.

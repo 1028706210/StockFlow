@@ -43,3 +43,12 @@ export function stockState(stock) {
   if (stock.available < 10) return {key:'low',label:'低库存',tone:'warning'};
   return {key:'healthy',label:'库存充足',tone:'success'};
 }
+
+export function orderActions(status, role) {
+  if (role === 'BUYER') {
+    if (status === 'PENDING_CONFIRM') return ['confirm', 'cancel'];
+    if (status === 'SHIPPED') return ['complete'];
+  }
+  if ((role === 'WAREHOUSE' || role === 'ADMIN') && status === 'CONFIRMED') return ['ship'];
+  return [];
+}

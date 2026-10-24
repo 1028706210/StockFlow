@@ -29,3 +29,23 @@ Content-Type: application/json
 ### Read own order
 GET http://127.0.0.1:8082/api/orders/{{orderId}}
 Authorization: Basic buyer {{password}}
+
+### Confirm own order (simulated, no payment)
+POST http://127.0.0.1:8082/api/orders/{{orderId}}/confirm
+Authorization: Basic buyer {{password}}
+
+### Cancel a pending own order
+POST http://127.0.0.1:8082/api/orders/{{orderId}}/cancel
+Authorization: Basic buyer {{password}}
+
+### Warehouse fulfillment
+GET http://127.0.0.1:8082/api/fulfillment/orders
+Authorization: Basic warehouse {{password}}
+
+### Ship a confirmed order
+POST http://127.0.0.1:8082/api/fulfillment/orders/{{orderId}}/ship
+Authorization: Basic warehouse {{password}}
+
+### Buyer acknowledges receipt
+POST http://127.0.0.1:8082/api/orders/{{orderId}}/complete
+Authorization: Basic buyer {{password}}

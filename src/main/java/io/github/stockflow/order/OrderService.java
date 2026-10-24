@@ -19,6 +19,58 @@ public class OrderService {
     }
     public List<Summary> list(long buyer){return orders.list(buyer);}
     public View get(long buyer,long id){var row=orders.byId(buyer,id);if(row==null)throw ApiException.notFound();return view(row);}
+    public List<Summary> fulfillmentList(){return orders.fulfillmentList();}
+    public View fulfillmentGet(long id){var row=orders.anyById(id);if(row==null)throw ApiException.notFound();return view(row);}
+    public View confirm(long buyer,long id){
+        return transaction.execute(status->{
+            var row=ownedForUpdate(buyer,id);
+            if(row.status().equals("CONFIRMED")||row.status().equals("SHIPPED")||row.status().equals("COMPLETED"))return view(row);
+            requireState(row,"PENDING_CONFIRM");
+            if(orders.confirm(id)!=1)throw ApiException.conflict("ORDER_EXPIRED","Order confirmation deadline has passed");
+            return view(orders.byId(buyer,id));
+        });
+    }
+    public View cancel(long buyer,long id){
+        return transaction.execute(status->{
+            var row=ownedForUpdate(buyer,id);
+            if(row.status().equals("CANCELLED"))return view(row);
+            requireState(row,"PENDING_CONFIRM");
+            release(row,buyer,"USER");
+            return view(orders.byId(buyer,id));
+        });
+    }
+    public View complete(long buyer,long id){
+        return transaction.execute(status->{
+            var row=ownedForUpdate(buyer,id);
+            if(row.status().equals("COMPLETED"))return view(row);
+            requireState(row,"SHIPPED");
+            orders.transition(id,"COMPLETED",null);
+            return view(orders.byId(buyer,id));
+        });
+    }
+    public View ship(long actor,long id){
+        return transaction.execute(status->{
+            var row=orders.lockAny(id);
+            if(row==null)throw ApiException.notFound();
+            if(row.status().equals("SHIPPED")||row.status().equals("COMPLETED"))return view(row);
+            requireState(row,"CONFIRMED");
+            // items() returns SKU order, shared by creation, cancellation and shipping.
+            for(var item:orders.items(id)){
+                if(inventory.ship(item.skuId(),item.quantity())!=1)
+                    throw ApiException.conflict("INVENTORY_CONFLICT","Reserved inventory is inconsistent");
+                inventory.ledger(item.skuId(),id,actor,"SHIP","order:"+id,item.quantity());
+            }
+            orders.transition(id,"SHIPPED",null);
+            return view(orders.anyById(id));
+        });
+    }
+    public void expire(long id){
+        transaction.executeWithoutResult(status->{
+            var row=orders.lockAny(id);
+            if(row!=null&&row.status().equals("PENDING_CONFIRM")&&orders.expired(id))
+                release(row,row.buyerId(),"EXPIRED");
+        });
+    }
     public Creation create(long buyer,CreateOrder request){
         var lines=OrderLines.normalize(request.items());var hash=OrderLines.fingerprint(lines);
         var existing=orders.byKey(buyer,request.requestKey());
@@ -56,5 +108,21 @@ public class OrderService {
         if(!row.payloadHash().equals(hash))throw ApiException.conflict("IDEMPOTENCY_CONFLICT","Request key was used for different content");
         return new Creation(view(row),true);
     }
-    private View view(Row row){return new View(row.id(),row.status(),row.total(),row.expiresAt(),orders.items(row.id()));}
+    private Row ownedForUpdate(long buyer,long id){
+        var row=orders.lockOwned(buyer,id);
+        if(row==null)throw ApiException.notFound();
+        return row;
+    }
+    private void requireState(Row row,String expected){
+        if(!row.status().equals(expected))throw ApiException.conflict("INVALID_ORDER_STATE","Order cannot perform this action in its current state");
+    }
+    private void release(Row row,long actor,String reason){
+        for(var item:orders.items(row.id())){
+            if(inventory.release(item.skuId(),item.quantity())!=1)
+                throw ApiException.conflict("INVENTORY_CONFLICT","Reserved inventory is inconsistent");
+            inventory.ledger(item.skuId(),row.id(),actor,"RELEASE","order:"+row.id(),item.quantity());
+        }
+        orders.transition(row.id(),"CANCELLED",reason);
+    }
+    private View view(Row row){return new View(row.id(),row.status(),row.total(),row.expiresAt(),orders.items(row.id()),row.buyerId(),row.cancelReason());}
 }
