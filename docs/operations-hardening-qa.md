@@ -24,3 +24,5 @@
 [完整样本与SQL执行计划](evidence/2026-10-26-local-performance.json)。按SKU查流水使用sku_id索引反向扫描，超时订单扫描使用ix_expiration范围扫描；样本数据量小，不代表大规模SQL性能，也没有为小样本新增索引。CI重新生成target/performance-evidence.json并上传构件。
 
 本轮使用GitHub插件读取仓库、创建PR和核验CI，使用浏览器工具做实际交互及截图。界面在既有设计上直接修改HTML/CSS/Canvas，没有新增Figma或Canva文件。没有测量真实浏览器FPS或做跨浏览器/正式无障碍认证。支付、物流、找回密码、管理员账号维护和公网部署仍不属于已实现范围。
+
+最终追加验收：ST-2盘亏2件后，商品抽屉自动显示实存10和关联盘亏流水；统一Windows启动脚本实际启动成功，Maven不在PATH仍正常运行已有JAR。买家概览只显示本人待办/趋势，点击待确认进入正确状态筛选。浏览器错误与警告日志为空。提交2bdb3b4的[远程测试和容器检查](https://github.com/1028706210/StockFlow/actions/runs/40334077710)均通过；最后仅修正顶部粒子标签对齐。

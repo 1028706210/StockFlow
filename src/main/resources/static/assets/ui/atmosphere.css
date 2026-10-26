@@ -69,7 +69,7 @@ dialog.particle-surface>.particle-field{opacity:.55}
 .trend-bars{height:92px;display:flex;gap:4px;align-items:flex-end;justify-content:center;border-bottom:1px solid #2c404b;background:repeating-linear-gradient(to top,transparent 0,transparent 29px,#24384366 30px,#24384366 31px)}
 .trend-bar{width:min(24%,18px);min-height:2px;background:#8bdfbf;border-radius:4px 4px 0 0;transition:height .3s ease}
 .trend-bar.outbound{background:#79b9dd}.trend-bar.orders{background:#c2a6e5}
-.density-control{display:flex;align-items:center;gap:7px;color:#a6bac5;font-size:12px}
+.density-control{display:flex;flex-direction:row;align-items:center;gap:7px;color:#a6bac5;font-size:12px}
 .density-control select{width:auto;max-width:100px;padding:6px 9px;font-size:12px}
 body[data-density=off] .particle-field{visibility:hidden}
 .reconcile-summary{margin-bottom:18px;padding:16px 20px;border:1px solid #355249;border-radius:12px;background:#18352e60;color:#b4e2d1}
