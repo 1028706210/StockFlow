@@ -30,7 +30,7 @@ class StockFlowIntegrationTest {
     @BeforeEach void resetOnlyTheIsolatedTestSchema() {
         assertEquals("stockflow_test",jdbc.queryForObject("SELECT DATABASE()",String.class),
             "Refuse destructive cleanup outside the isolated StockFlow test schema");
-        for(var table:List.of("inventory_ledger","order_item","customer_order","inventory","sku"))
+        for(var table:List.of("operation_audit","inventory_ledger","stocktake","order_item","customer_order","inventory","sku"))
             jdbc.update("DELETE FROM "+table);
     }
     Reply request(String user,String method,String path,String body) throws Exception {

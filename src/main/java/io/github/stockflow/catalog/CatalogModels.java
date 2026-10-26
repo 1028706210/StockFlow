@@ -8,4 +8,8 @@ public final class CatalogModels {
         @NotBlank @Size(max=120)String name,
         @NotNull @DecimalMin("0.00") @DecimalMax("999999.99") @Digits(integer=6,fraction=2)BigDecimal price){}
     public record Sku(long id,String code,String name,BigDecimal price,boolean active){}
+    public record UpdateSku(
+        @NotBlank @Size(max=120)String name,
+        @NotNull @DecimalMin("0.00") @DecimalMax("999999.99") @Digits(integer=6,fraction=2)BigDecimal price,
+        @NotNull Boolean active){}
 }

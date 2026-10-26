@@ -40,7 +40,7 @@ export function paginateRows(rows, query, page, size, keys) {
 }
 export function stockState(stock) {
   if (stock.available <= 0) return {key:'empty',label:'暂无可用',tone:'neutral'};
-  if (stock.available < 10) return {key:'low',label:'低库存',tone:'warning'};
+  if (stock.available < (stock.safetyStock ?? 10)) return {key:'low',label:'低库存',tone:'warning'};
   return {key:'healthy',label:'库存充足',tone:'success'};
 }
 
@@ -51,4 +51,14 @@ export function orderActions(status, role) {
   }
   if ((role === 'WAREHOUSE' || role === 'ADMIN') && status === 'CONFIRMED') return ['ship'];
   return [];
+}
+
+export function orderTimeline(order) {
+  const stages=[['created','订单创建','createdAt'],['confirmed','买家确认','confirmedAt'],['shipped','仓库发货','shippedAt'],['completed','确认收货','completedAt']];
+  if(order.status==='CANCELLED')return [
+    {key:'created',label:'订单创建',at:order.createdAt??null,done:true,current:false},
+    {key:'cancelled',label:order.cancelReason==='EXPIRED'?'超时取消':'买家取消',at:order.cancelledAt??null,done:true,current:true}
+  ];
+  const index={PENDING_CONFIRM:0,CONFIRMED:1,SHIPPED:2,COMPLETED:3}[order.status]??0;
+  return stages.map(([key,label,field],n)=>({key,label,at:order[field]??null,done:n<=index,current:n===index}));
 }

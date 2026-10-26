@@ -138,4 +138,15 @@ class AuthenticationIntegrationTest {
             assertEquals(List.of(201,409),statuses);assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM app_user WHERE username=?",Integer.class,raced));
         }finally{pool.shutdownNow();}
     }
+
+    @Test void anonymousCanLoadPresentationAssetsButNotBusinessData() throws Exception {
+        var client=browser();
+        for(String asset:List.of("stockflow-sans.woff2","layout-dashboard.svg")){
+            var response=client.send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+port+"/assets/ui/"+asset)).GET().build(),HttpResponse.BodyHandlers.ofByteArray());
+            assertEquals(200,response.statusCode(),asset);
+            assertTrue(response.body().length>100,asset);
+        }
+        assertEquals(401,request(client,"GET","/api/inventory",null,null,null,null).status());
+        assertEquals(401,me(client).status());
+    }
 }

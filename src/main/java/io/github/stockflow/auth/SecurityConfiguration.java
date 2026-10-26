@@ -36,7 +36,7 @@ public class SecurityConfiguration {
             }))
             .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .requestCache(c->c.disable())
-            .authorizeHttpRequests(a->a.requestMatchers("/","/index.html","/app.js","/styles.css","/ui-model.mjs","/api-client.mjs","/api/health","/api/auth/csrf","/api/auth/login","/api/auth/register","/error").permitAll().anyRequest().authenticated())
+            .authorizeHttpRequests(a->a.requestMatchers("/","/index.html","/app.js","/styles.css","/ui-model.mjs","/api-client.mjs","/assets/ui/**","/api/health","/api/auth/csrf","/api/auth/login","/api/auth/register","/error").permitAll().anyRequest().authenticated())
             .httpBasic(b->b.authenticationEntryPoint((r,s,e)->ApiErrors.writeSecurity(r,s,401)))
             .formLogin(f->f.loginProcessingUrl("/api/auth/login")
                 .successHandler((request,response,auth)->{

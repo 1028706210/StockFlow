@@ -56,3 +56,9 @@ test('库存状态使用可用量，不将已预留库存算作可售', () => {
   assert.equal(stockState({onHand:100,reserved:95,available:5}).key,'low');
   assert.equal(stockState({onHand:100,reserved:0,available:100}).key,'healthy');
 });
+
+test('每个商品的安全库存决定状态，等于安全线即健康',()=>{
+  assert.equal(stockState({available:12,safetyStock:20}).key,'low');
+  assert.equal(stockState({available:3,safetyStock:3}).key,'healthy');
+  assert.equal(stockState({available:0,safetyStock:1}).key,'empty');
+});

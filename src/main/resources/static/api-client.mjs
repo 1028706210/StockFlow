@@ -16,7 +16,7 @@ export async function requestJson(getSession,method,path,body,csrf=getSession().
  }
  if(epoch!==getSession().epoch)throw staleError();
  if(!response.ok){
-  const messages={UNAUTHENTICATED:'身份验证失败，请检查账号和密码。',FORBIDDEN:'当前操作缺少权限或登录已过期，请刷新后重试。',
+  const messages={STOCK_CHANGED:'库存已变化。请取消这张盘点单，重新核对实盘数量后建立新单。',RESERVED_STOCK:'实盘数量低于已预留量，请先核对库存和有效订单。',INVALID_STOCKTAKE_STATE:'盘点状态已变化，请重新打开盘点单。',METHOD_NOT_ALLOWED:'此操作不受支持，请刷新页面。',UNSUPPORTED_MEDIA_TYPE:'提交格式不正确，请刷新页面。',UNAUTHENTICATED:'身份验证失败，请检查账号和密码。',FORBIDDEN:'当前操作缺少权限或登录已过期，请刷新后重试。',
    INSUFFICIENT_STOCK:'可用库存不足，请调整商品或数量。',IDEMPOTENCY_CONFLICT:'此请求标识已用于不同的内容，请先核对原操作。',
    SKU_NOT_FOUND:'商品不存在或已停用，请刷新商品列表。',SKU_CODE_EXISTS:'SKU 编码已存在，请使用其他编码。',
    NOT_FOUND:'未找到该记录，或该记录不属于当前账号。',INVALID_REQUEST:'填写内容不符合要求，请检查字段格式和整数数量。',

@@ -1,18 +1,22 @@
 # StockFlow
 
-单仓库存与订单履约系统，面向 Java 后端学习与实习项目展示。当前实现 **P1：持久化账号与订单履约闭环**，业务核心独立编写，未复制课程项目或使用课程数据库。
+单仓库存与订单履约系统，面向 Java 后端学习与实习项目展示。当前实现 **持久化账号、订单履约闭环、库存流水与低库存预警**，业务核心独立编写，未复制课程项目或使用课程数据库。
 
 ## 已实现
 
 - MySQL 账号持久化、买家注册、BCrypt 密码哈希、登录、会话恢复和退出失效。
 - Spring Security 服务端会话；浏览器使用 HttpOnly / SameSite=Lax Cookie，写入操作校验 CSRF。
 - 买家、仓管、管理员角色与订单资源归属校验。公开注册固定为 BUYER。
-- 商品创建与查询，库存查询，带操作键的幂等入库。
+- 商品创建、详情查询、名称/价格编辑和上架/停用；商品、库存、订单全量分页与搜索；带操作键的幂等入库。
 - 多商品下单、规范化数量、服务端价格快照、请求内容指纹及幂等重放。
 - 下单预留、确认、取消释放、超时取消释放、仓管发货扣减、买家确认收货。
 - 订单状态、库存和流水在同一 MySQL 事务内更新；多 SKU 失败整体回滚。
-- 工作概览、商品/库存/本人订单/仓管履约列表、状态筛选和图形化下单。
-- 桌面鼠标悬停反馈与移动布局；尊重减少动态效果设置。
+- 数据库全量汇总工作概览、商品/库存/本人订单/仓管履约分页列表、状态筛选和图形化下单。
+- 商品详情抽屉串联商品资料、库存和该商品流水；订单/入库选择器支持搜索全部商品目录。
+- 库存流水查询：入库、订单预留、取消释放与发货出库，展示实存/预留变化，支持商品搜索、类型筛选及游标分页。
+- 商品安全库存持久化：每商品默认 10 件，可由仓管/管理员调整；概览与库存状态读取保存规则。预警仅在售商品，显示安全线、补货差额并支持直接入库。
+- 订单履约时间线：创建、确认、发货、收货和取消时间由数据库记录；状态和时间同事务更新，重复操作保留首次时间。历史缺失时间明确标注。
+- 墨蓝深色界面、薄荷绿光感、全界面粒子背景、分层流动与鼠标连线；支持暂停/恢复、减少动态效果、离屏停止绘制，保留表格可读性和手机布局。
 
 当前没有接入真实支付、物流、找回密码、管理员用户维护、Redis、RabbitMQ 或 outbox。确认订单是模拟业务操作，不产生支付行为。
 
@@ -37,7 +41,7 @@ Maven 未在 PATH / MAVEN_HOME 时，为 Invoke-Local.ps1 传入 -Maven 指定 m
 
 打开 [本地工作台](http://127.0.0.1:8082)。演示账号 buyer、buyer2、warehouse、admin 的初始口令见本机 .local/demo-login.txt；注册账号使用自己设置的密码。登录会话在 30 分钟无活动后过期，退出会使当前会话立即失效。
 
-升级脚本只操作 stockflow_dev / stockflow_test，增加 app_user 和订单 cancel_reason，保留原商品、订单及演示用户 ID 1–4。新用户编号从 100 起分配；重启只插入缺失演示账号，不覆盖已有密码。SQL 位于 [V002 升级文件](db/migrations/V002__accounts_and_fulfillment.sql)；其他环境需要先审阅并应用对应升级。
+升级脚本只操作 stockflow_dev / stockflow_test，按文件名顺序执行 db/migrations 中的增量 SQL。V002 增加 app_user 和订单 cancel_reason；V003 增加商品安全库存和订单阶段时间，保留原商品、订单及演示用户 ID 1–4。新用户编号从 100 起分配；重启只插入缺失演示账号，不覆盖已有密码。SQL 位于 [V002 升级文件](db/migrations/V002__accounts_and_fulfillment.sql) 与 [V003 升级文件](db/migrations/V003__stock_policy_and_order_times.sql)；其他环境需要先审阅并应用对应升级。已有库启动新版前执行升级，首次建库的 schema.sql 已包含这些字段。
 
 开发数据库：127.0.0.1:3308 / stockflow_dev；测试数据库：同实例的 stockflow_test，使用不同数据库用户与密码。课程库 zzyl10 没有参与升级。
 
@@ -73,9 +77,19 @@ Maven 未在 PATH / MAVEN_HOME 时，为 Invoke-Local.ps1 传入 -Maven 指定 m
 | POST /api/auth/login | 表单编码登录，200，创建/轮换会话 |
 | GET /api/auth/me | 当前身份，匿名 401 |
 | POST /api/auth/logout | 带 CSRF 退出，204 |
-| GET / POST /api/skus | 查询 / 仓管创建商品 |
+| GET / POST /api/skus | 兼容旧查询 / 仓管创建商品 |
+| GET /api/skus/page | 全量商品搜索、销售状态、分页 |
+| GET / PUT /api/skus/{id} | 商品详情 / 仓管修改名称、价格、销售状态 |
+| GET /api/dashboard | 当前角色范围内的数据库全量汇总 |
+| GET /api/inventory/page | 仓管全量库存搜索、状态与分页 |
+| GET /api/inventory/{skuId} | 仓管单商品库存及安全库存 |
+| PUT /api/inventory/{skuId}/policy | 仓管保存商品安全库存，JSON {safetyStock}，1–1000000 |
+| GET /api/orders/page | 本人订单全量查询与分页 |
+| GET /api/fulfillment/orders/page | 仓管订单全量查询与分页 |
 | GET /api/inventory | 仓管查询库存 |
 | POST /api/inventory/{skuId}/receipts | 仓管幂等入库 |
+| GET /api/inventory/ledger | 仓管流水查询，q/type/skuId/beforeId/limit |
+| GET /api/inventory/alerts | 仓管全量预警，默认按商品规则；q/beforeId/limit，可选 threshold 临时覆盖 |
 | GET / POST /api/orders | 本人订单列表 / 幂等创建 |
 | GET /api/orders/{id} | 本人订单详情 |
 | POST /api/orders/{id}/confirm | 本人确认 |
@@ -94,20 +108,38 @@ Maven 未在 PATH / MAVEN_HOME 时，为 Invoke-Local.ps1 传入 -Maven 指定 m
 
 ## 界面与验证
 
-![StockFlow 工作台](docs/screenshots/workbench.png)
+![StockFlow 工作台](docs/screenshots/particle-overview.png)
+
+[全量商品列表](docs/screenshots/complete-products.png) · [商品详情](docs/screenshots/complete-product-detail.png) · [商品编辑](docs/screenshots/complete-product-edit.png) · [手机详情](docs/screenshots/complete-mobile-product.png)
+
+[库存流水](docs/screenshots/final-ledger.png) · [库存预警](docs/screenshots/final-alerts.png) · [手机预警页](docs/screenshots/final-mobile-alerts.png)
 
 [登录](docs/screenshots/login.png) · [注册](docs/screenshots/register.png) · [订单履约](docs/screenshots/fulfillment.png) · [本人订单](docs/screenshots/orders.png) · [下单](docs/screenshots/create-order.png) · [移动端](docs/screenshots/mobile-order.png)
 
 鼠标停留时，按钮轻微抬升、指标卡增加阴影、导航轻微平移、输入框边框渐变。动画仅对精细鼠标且未要求减少动态效果的设备启用。
 
-列表仅展示最近 100 条，页面内每页 8 条；指标来自当前加载数据，不是全库统计或营收统计。状态操作以服务端响应为准。
+浏览器中的商品、库存和订单列表均搜索全库，每页默认 8 条，返回完整筛选总数。首页指标直接由服务端汇总；下方近期记录独立查询，不受列表筛选影响。买家订单和汇总限定本人，订单金额包含已取消订单，不是营收。流水和预警每页 20 条，使用编号游标翻页；旧数组列表接口为兼容已有调用保留。预警总数覆盖完整筛选集合；预警默认按各商品保存的安全库存判断，默认 10 件，严格低于才预警。每行返回 safetyStock、有效 threshold 和 shortage；顶层 threshold 在默认模式为 null。保留可选 threshold 参数供旧客户端临时覆盖查询，不修改保存规则。停用商品不进入预警；库存列表仍能查看停用库存。没有邮件或推送通知。状态操作以服务端响应为准。
 
 ```powershell
 node --test src/test/frontend/*.test.mjs
 .\tools\Invoke-Local.ps1 -Action test
 ```
 
-当前自动化验证：**37 项 Java/MySQL 测试、31 项前端测试通过，项目打包成功**；真实浏览器已走通账号与订单流程、定时到期释放和悬停动画。详细记录见 [执行记录](docs/progress.md) 与 [UI 验收](design-qa.md)。真实 MySQL 测试覆盖事务、并发库存、请求幂等、注册唯一性、会话/CSRF、状态竞争、重复操作、超时释放及失败回滚。测试通过只代表相应范围，不是吞吐量基准或生产认证。
+当前自动化验证：**63 项 Java/MySQL 测试、66 项前端测试通过，项目打包成功**；真实浏览器已走通账号与订单流程、定时到期释放和悬停动画。详细记录见 [执行记录](docs/progress.md) 与 [UI 验收](design-qa.md)。真实 MySQL 测试覆盖事务、并发库存、请求幂等、注册唯一性、会话/CSRF、状态竞争、重复操作、超时释放及失败回滚。测试通过只代表相应范围，不是吞吐量基准或生产认证。
 本机证据位于 artifacts/p1-20261024（忽略提交）；GitHub Actions 配置存在，尚未声称远程执行成功。
 
 [Figma/Canva 设计来源](docs/UI-DESIGN.md) · [初始业务设计](docs/specs/2026-10-22-stockflow-design.md) · [本轮设计](docs/specs/2026-10-23-account-fulfillment-design.md) · [本轮实施计划](docs/plans/2026-10-23-account-fulfillment.md)
+
+
+2026-10-25 新增功能与界面验收详见 [库存可视化验收](docs/inventory-visibility-qa.md)。新接口复用现有库存事务记录，无数据库迁移。
+
+
+2026-10-26 完成全量工作台、商品维护和商品详情，详见 [完整工作台验收](docs/complete-workbench-qa.md)。改价保留历史订单价格快照；停用不影响已有订单继续履约。此轮没有数据库迁移。
+
+2026-10-26 完成商品安全库存与订单时间线，详见 [本轮验收](docs/stock-policy-timeline-qa.md)。
+
+[商品安全库存预警](docs/screenshots/business-alerts.png) · [完整履约时间线](docs/screenshots/business-timeline.png) · [手机时间线](docs/screenshots/business-mobile-timeline.png) · [手机规则设置](docs/screenshots/business-mobile-policy.png)
+
+2026-10-26 完成 Figma/Canva 粒子视觉升级，详见 [界面验收](docs/particle-ui-qa.md)。[登录效果](docs/screenshots/particle-login.png) · [手机概览](docs/screenshots/particle-mobile-overview.png) · [手机登录](docs/screenshots/particle-mobile-login.png)。
+
+2026-10-26 将粒子扩展到所有业务页面、表格内容区与弹窗，统一全域漂浮光点、多层流动、页面色调和鼠标连接。详见 [全界面粒子验收](docs/all-pages-particles-qa.md)。

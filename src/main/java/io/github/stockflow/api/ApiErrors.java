@@ -23,6 +23,13 @@ public class ApiErrors {
     ResponseEntity<Error> denied(HttpServletRequest r){return ResponseEntity.status(403).body(body(r,"FORBIDDEN","Access denied"));}
     @ExceptionHandler(NoResourceFoundException.class)
     ResponseEntity<Error> missing(HttpServletRequest r){return ResponseEntity.status(404).body(body(r,"NOT_FOUND","Resource not found"));}
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    ResponseEntity<Error> method(org.springframework.web.HttpRequestMethodNotSupportedException e,HttpServletRequest r){
+        var headers=new HttpHeaders();if(e.getSupportedHttpMethods()!=null)headers.setAllow(e.getSupportedHttpMethods());
+        return new ResponseEntity<>(body(r,"METHOD_NOT_ALLOWED","Request method is not supported"),headers,HttpStatus.METHOD_NOT_ALLOWED);
+    }
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    ResponseEntity<Error> media(HttpServletRequest r){return ResponseEntity.status(415).body(body(r,"UNSUPPORTED_MEDIA_TYPE","Request content type is not supported"));}
     @ExceptionHandler(Exception.class)
     ResponseEntity<Error> unexpected(Exception e,HttpServletRequest r){
         LoggerFactory.getLogger(ApiErrors.class).error("Request {} failed",r.getAttribute("requestId"),e);

@@ -124,5 +124,5 @@ public class OrderService {
         }
         orders.transition(row.id(),"CANCELLED",reason);
     }
-    private View view(Row row){return new View(row.id(),row.status(),row.total(),row.expiresAt(),orders.items(row.id()),row.buyerId(),row.cancelReason());}
+    private View view(Row row){return new View(row.id(),row.status(),row.total(),row.expiresAt(),orders.items(row.id()),row.buyerId(),row.cancelReason(),row.createdAt(),row.confirmedAt(),row.shippedAt(),row.completedAt(),row.cancelledAt());}
 }

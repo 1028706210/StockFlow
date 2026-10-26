@@ -10,7 +10,10 @@ CREATE TABLE IF NOT EXISTS inventory (
  sku_id BIGINT PRIMARY KEY,
  on_hand BIGINT NOT NULL DEFAULT 0,
  reserved BIGINT NOT NULL DEFAULT 0,
+ safety_stock INT NOT NULL DEFAULT 10,
+ version BIGINT NOT NULL DEFAULT 0,
  FOREIGN KEY(sku_id) REFERENCES sku(id),
+ CHECK(safety_stock BETWEEN 1 AND 1000000),
  CHECK(on_hand >= reserved AND reserved >= 0 AND on_hand <= 1000000000)
 ) ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS customer_order (
@@ -20,6 +23,10 @@ CREATE TABLE IF NOT EXISTS customer_order (
  payload_hash CHAR(64) CHARACTER SET ascii NOT NULL,
  status VARCHAR(24) NOT NULL,
  cancel_reason VARCHAR(24) NULL,
+ confirmed_at DATETIME(6) NULL,
+ shipped_at DATETIME(6) NULL,
+ completed_at DATETIME(6) NULL,
+ cancelled_at DATETIME(6) NULL,
  total DECIMAL(14,2) NOT NULL DEFAULT 0,
  expires_at DATETIME(6) NOT NULL,
  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
@@ -37,10 +44,34 @@ CREATE TABLE IF NOT EXISTS order_item (
  CHECK(quantity BETWEEN 1 AND 99),
  CHECK(unit_price >= 0)
 ) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS stocktake (
+ id BIGINT PRIMARY KEY AUTO_INCREMENT,
+ sku_id BIGINT NOT NULL,
+ sku_code VARCHAR(40) NOT NULL,
+ sku_name VARCHAR(120) NOT NULL,
+ actor_id BIGINT NOT NULL,
+ request_key VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ target_on_hand BIGINT NOT NULL,
+ original_on_hand BIGINT NOT NULL,
+ original_reserved BIGINT NOT NULL,
+ inventory_version BIGINT NOT NULL,
+ reason VARCHAR(240) NOT NULL,
+ status VARCHAR(16) NOT NULL DEFAULT 'DRAFT',
+ confirmed_by BIGINT NULL,
+ adjustment BIGINT NULL,
+ created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ confirmed_at DATETIME(6) NULL,
+ UNIQUE KEY uk_stocktake_request(actor_id,request_key),
+ KEY ix_stocktake_status(status,id),
+ FOREIGN KEY(sku_id) REFERENCES sku(id),
+ CHECK(target_on_hand BETWEEN 0 AND 1000000000),
+ CHECK(status IN ('DRAFT','CONFIRMED','CANCELLED'))
+) ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS inventory_ledger (
  id BIGINT PRIMARY KEY AUTO_INCREMENT,
  sku_id BIGINT NOT NULL,
  order_id BIGINT NULL,
+ stocktake_id BIGINT NULL,
  actor_id BIGINT NOT NULL,
  operation_type VARCHAR(16) NOT NULL,
  operation_key VARCHAR(90) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
@@ -49,6 +80,7 @@ CREATE TABLE IF NOT EXISTS inventory_ledger (
  UNIQUE KEY uk_inventory_operation(operation_type,operation_key,sku_id),
  FOREIGN KEY(sku_id) REFERENCES sku(id),
  FOREIGN KEY(order_id) REFERENCES customer_order(id),
+ CONSTRAINT fk_ledger_stocktake FOREIGN KEY(stocktake_id) REFERENCES stocktake(id),
  CHECK(quantity > 0)
 ) ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS app_user (
@@ -60,3 +92,17 @@ CREATE TABLE IF NOT EXISTS app_user (
  created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
  CHECK(role IN ('BUYER','WAREHOUSE','ADMIN'))
 ) ENGINE=InnoDB AUTO_INCREMENT=100;
+
+CREATE TABLE IF NOT EXISTS operation_audit (
+ id BIGINT PRIMARY KEY AUTO_INCREMENT,
+ actor_id BIGINT NOT NULL,
+ action VARCHAR(32) NOT NULL,
+ entity_type VARCHAR(16) NOT NULL,
+ entity_id BIGINT NOT NULL,
+ entity_label VARCHAR(200) NOT NULL,
+ before_json JSON NULL,
+ after_json JSON NULL,
+ request_id VARCHAR(36) NOT NULL,
+ created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ KEY ix_audit_action_id(action,id)
+) ENGINE=InnoDB;

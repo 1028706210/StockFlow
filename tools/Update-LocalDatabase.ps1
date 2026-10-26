@@ -6,7 +6,7 @@ $taskConfig=Join-Path $taskRoot '.local\mysql-admin.cnf'
 if(-not(Test-Path -LiteralPath $taskClient)){throw 'MySQL client is required.'}
 if(-not(Test-Path -LiteralPath $taskConfig)){throw 'Run Start-LocalDatabase.ps1 before upgrading the private local databases.'}
 $taskSchema=[IO.File]::ReadAllText((Join-Path $taskRoot 'src\main\resources\schema.sql'))
-$taskUpgrade=[IO.File]::ReadAllText((Join-Path $taskRoot 'db\migrations\V002__accounts_and_fulfillment.sql'))
+$taskUpgrade=(Get-ChildItem -LiteralPath (Join-Path $taskRoot 'db\migrations') -Filter '*.sql' -File | Sort-Object Name | ForEach-Object { [IO.File]::ReadAllText($_.FullName) }) -join "`n"
 foreach($taskDatabase in @('stockflow_dev','stockflow_test')){
     $taskActual=& $taskClient "--defaults-extra-file=$taskConfig" "--database=$taskDatabase" --batch --skip-column-names -e 'SELECT DATABASE()'
     if($LASTEXITCODE -ne 0 -or "$taskActual" -ne $taskDatabase){throw 'Refuse schema upgrade outside the isolated StockFlow database.'}

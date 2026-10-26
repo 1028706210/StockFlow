@@ -18,7 +18,7 @@ if($Action -eq 'stop-db'){
     Stop-Process -Id $taskPidNumber
     'Stopped StockFlow private MySQL.';exit 0
 }
-if(-not $Maven){
+if($Action -ne 'run' -and -not $Maven){
     $taskCommand=Get-Command mvn.cmd -ErrorAction SilentlyContinue
     if($taskCommand){$Maven=$taskCommand.Source}
     elseif($env:MAVEN_HOME -and (Test-Path -LiteralPath (Join-Path $env:MAVEN_HOME 'bin\mvn.cmd'))){$Maven=Join-Path $env:MAVEN_HOME 'bin\mvn.cmd'}
@@ -27,6 +27,7 @@ if(-not $Maven){
 Push-Location $taskRoot
 try{
     if($Action -eq 'run'){
+        if(-not(Test-Path -LiteralPath (Join-Path $taskRoot 'target\stockflow-0.1.0-SNAPSHOT.jar'))){throw 'Package the application before running the JAR.'}
         & java -jar (Join-Path $taskRoot 'target\stockflow-0.1.0-SNAPSHOT.jar')
     }else{
         & $Maven -B '-Dstyle.color=never' $Action
