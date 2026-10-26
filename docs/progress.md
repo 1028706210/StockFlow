@@ -96,3 +96,8 @@ Browser acceptance uses actual packaged JAR, Edge and native MySQL. It creates o
 Screenshots updated for login/register/workbench/fulfillment/own orders/cart/mobile. Mouse hover uses fine-pointer CSS transitions for buttons/cards/navigation/inputs/login steps; reduced-motion suppresses movement. This is one browser engine and bounded desktop/mobile coverage, not formal accessibility certification or hosted CI.
 
 Remaining boundaries: real payments/logistics, password recovery, administrative account maintenance, Redis/MQ/outbox, all-history server pagination, broad browser coverage and production deployment/security review are not delivered. Public registration grants no warehouse/admin privilege. P0 historical evidence above remains a record of its original implementation, not a statement that P1 is still missing.
+
+
+## 2026-10-26 盘点、审计、对账与交付
+
+已实现盘点草稿/确认/取消、库存版本检查、盘盈盘亏流水、只读对账与事务内审计。前端增加角色待办、真实七日趋势、表格操作、失败数据保留与粒子密度；附独立Windows启动和Compose。73项Java/MySQL、73项前端测试通过，GitHub测试与容器启动实际通过。历史段落按原时间保留，最新范围、条件与证据见 [本轮验收](operations-hardening-qa.md)。

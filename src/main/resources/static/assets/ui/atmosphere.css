@@ -79,3 +79,10 @@ body[data-density=off] .particle-field{visibility:hidden}
 .sidebar{overflow-y:auto}.sidebar-bottom{margin-top:24px}
 @media(max-width:700px){.task-grid{grid-template-columns:1fr;gap:8px}.task-card{padding:13px 15px}.task-card strong{font-size:23px}.trend-chart{gap:5px}.trend-panel{padding:18px 12px}.trend-count{font-size:8px}.trend-bars{height:75px}.density-control>span{display:none}.topbar .motion-toggle span{display:none}.account{gap:8px}.density-control select{max-width:76px}}
 @media(prefers-reduced-motion:reduce){.task-card,.trend-bar{transition:none}.task-card:hover{transform:none}}
+
+#stocktake-inputs{border:0;padding:0;margin:18px 0;display:grid;gap:14px;min-width:0}
+#stocktake-inputs label{display:grid;gap:8px}
+#stocktake-search-trigger{justify-self:start;margin-top:-6px}
+#stocktake-reason{width:100%;box-sizing:border-box;background:#111e29;border:1px solid #304855;border-radius:10px;padding:12px;color:#e3edf1;font:inherit;line-height:1.6;outline:none;transition:border-color .18s,box-shadow .18s}
+#stocktake-reason::placeholder{color:#8ba2b0}
+#stocktake-reason:focus{border-color:#88cfb4;box-shadow:0 0 0 3px #80d7b51c}

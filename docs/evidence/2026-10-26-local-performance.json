@@ -1,0 +1,47 @@
+{
+  "scenario": "100 real HTTP order requests; 16 clients; one SKU with 20 units; Basic authentication included",
+  "environment": "Windows 11; Java 17.0.7; CPUs 16",
+  "requests": 100,
+  "clients": 16,
+  "seconds": 0.6316061,
+  "requestsPerSecond": 158.32652661207675,
+  "p50Milliseconds": 90,
+  "p95Milliseconds": 126,
+  "created": 20,
+  "stockConflicts": 80,
+  "unexpectedResponses": 0,
+  "reserved": 20,
+  "reconciliationMismatches": 0,
+  "ledgerPlan": [
+    {
+      "id": 1,
+      "select_type": "SIMPLE",
+      "table": "inventory_ledger",
+      "partitions": null,
+      "type": "ref",
+      "possible_keys": "uk_inventory_operation,sku_id",
+      "key": "sku_id",
+      "key_len": "8",
+      "ref": "const",
+      "rows": 21,
+      "filtered": 100,
+      "Extra": "Backward index scan; Using index"
+    }
+  ],
+  "expirationPlan": [
+    {
+      "id": 1,
+      "select_type": "SIMPLE",
+      "table": "customer_order",
+      "partitions": null,
+      "type": "range",
+      "possible_keys": "ix_expiration",
+      "key": "ix_expiration",
+      "key_len": "106",
+      "ref": null,
+      "rows": 1,
+      "filtered": 100,
+      "Extra": "Using where; Using index"
+    }
+  ]
+}

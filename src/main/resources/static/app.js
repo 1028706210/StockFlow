@@ -650,10 +650,10 @@ function resetList(kind){
 }
 function renderTasksAndTrend(){
   const summary=state.dashboard||{},tasks=warehouse()?[
-    ['待发货',summary.confirmedCount,'处理已确认订单',()=>{state.fulfillmentStatus='CONFIRMED';$('#fulfillment-status').value='CONFIRMED';navigate('fulfillment');}],
+    ['待发货',summary.confirmedCount,'处理已确认订单',()=>{state.fulfillmentStatus='CONFIRMED';state.lists.fulfillment.page=1;$('#fulfillment-status').value='CONFIRMED';navigate('fulfillment');}],
     ['库存预警',summary.lowStockCount,'查看补货缺口',()=>navigate('alerts')],
     ['库存核对','只读','核对订单与流水',()=>navigate('reconciliation')]
-  ]:[['待确认',summary.pendingCount,'确认我的订单',()=>{state.ordersStatus='PENDING_CONFIRM';$('#orders-status').value='PENDING_CONFIRM';navigate('orders');}],['待收货',summary.shippedCount,'查看已发货订单',()=>{state.ordersStatus='SHIPPED';$('#orders-status').value='SHIPPED';navigate('orders');}]];
+  ]:[['待确认',summary.pendingCount,'确认我的订单',()=>{state.ordersStatus='PENDING_CONFIRM';state.lists.orders.page=1;$('#orders-status').value='PENDING_CONFIRM';navigate('orders');}],['待收货',summary.shippedCount,'查看已发货订单',()=>{state.ordersStatus='SHIPPED';state.lists.orders.page=1;$('#orders-status').value='SHIPPED';navigate('orders');}]];
   $('#overview-tasks').replaceChildren(...tasks.map(([label,count,note,action])=>{const card=button('',action,'task-card');card.disabled=!state.dashboard;card.append(node('span',label),node('strong',count??'—'),node('small',note+' ↗'));return card;}));
   const days=state.trends||[],maximum=Math.max(1,...days.flatMap(day=>warehouse()?[day.inbound,day.outbound,day.orders]:[day.orders]));
   $('#trend-subtitle').textContent=warehouse()?'入库件数 · 出库件数 · 新增订单数':'本人新增订单数';
@@ -664,6 +664,7 @@ function renderTasksAndTrend(){
     }
     const totals=warehouse()?day.inbound+' / '+day.outbound+' / '+day.orders:String(day.orders);column.append(node('small',totals,'trend-count'),bars,node('span',day.day.slice(5).replace('-','/')));return column;
   }));
+  $('#trend-chart').setAttribute('aria-label','最近七日：'+days.map(day=>day.day+'，'+(warehouse()?'入库 '+day.inbound+' 件，出库 '+day.outbound+' 件，':'')+'订单 '+day.orders+' 笔').join('；'));
   message('#trend-note',state.trendsError?'趋势更新失败，保留上次结果：'+state.trendsError:days.length?'统计最近七个自然日；盘点调整不计入收发货。':'暂无趋势数据');
 }
 async function loadOperations(kind,reset=false){
@@ -729,5 +730,5 @@ $('#stocktake-form').addEventListener('submit',event=>{event.preventDefault();re
 });});
 $('#stocktake-command-form').addEventListener('submit',event=>{event.preventDefault();const command=event.submitter?.value;return withForm(event.target,'#stocktake-command-error',async()=>{
   const detail=state.stocktakeDetail;if(!detail||!['confirm','cancel'].includes(command))throw new Error('请重新打开盘点单。');$('#stocktake-cancel').disabled=true;
-  try{const {data}=await request('POST','/api/stocktakes/'+detail.id+'/'+command);state.stocktakeDetail=data;renderStocktake(data);toast(command==='confirm'?'盘点已确认，差异已记录。':'盘点已取消。');await Promise.all([refreshData(),loadOperations('stocktakes')]);}finally{if(state.stocktakeDetail===detail||state.stocktakeDetail?.id===detail.id)$('#stocktake-cancel').disabled=false;}
+  try{const {data}=await request('POST','/api/stocktakes/'+detail.id+'/'+command);state.stocktakeDetail=data;renderStocktake(data);toast(command==='confirm'?'盘点已确认，差异已记录。':'盘点已取消。');await Promise.all([refreshData(),loadOperations('stocktakes')]);if($('#product-dialog').open&&state.productDetail?.id===detail.skuId)await openProduct(detail.skuId);}finally{if(state.stocktakeDetail===detail||state.stocktakeDetail?.id===detail.id)$('#stocktake-cancel').disabled=false;}
 });});
