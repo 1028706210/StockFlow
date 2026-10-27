@@ -86,7 +86,7 @@ public class OrderService {
                         if(sku==null || !sku.active())throw ApiException.notFound();
                         if(inventory.reserve(sku.id(),line.quantity())!=1)
                             throw ApiException.conflict("INSUFFICIENT_STOCK","Insufficient available stock");
-                        orders.item(order.id(),sku.id(),line.quantity(),sku.price());
+                        orders.item(order.id(),sku.id(),line.quantity(),sku.price(),sku.code(),sku.name());
                         inventory.ledger(sku.id(),order.id(),buyer,"RESERVE","order:"+order.id(),line.quantity());
                         total=total.add(sku.price().multiply(BigDecimal.valueOf(line.quantity())));
                     }

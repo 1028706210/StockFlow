@@ -34,13 +34,13 @@ public class WorkbenchController {
     public Page<Summary> orders(Authentication auth,@RequestParam(defaultValue="") @Size(max=120)String q,
         @RequestParam(defaultValue="all") @Pattern(regexp="all|PENDING_CONFIRM|CONFIRMED|SHIPPED|COMPLETED|CANCELLED")String status,
         @RequestParam(defaultValue="1") @Min(1) @Max(1000000)int page,
-        @RequestParam(defaultValue="8") @Min(1) @Max(100)int size){return service.orders(Actor.id(auth),q,status,page,size);}
+        @RequestParam(defaultValue="8") @Min(1) @Max(100)int size,@RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE)java.time.LocalDate from,@RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE)java.time.LocalDate to,@RequestParam(required=false)java.math.BigDecimal minTotal,@RequestParam(required=false)java.math.BigDecimal maxTotal){return service.orders(Actor.id(auth),q,status,page,size,QueryRange.of(from,to,minTotal,maxTotal));}
     @GetMapping("/api/fulfillment/orders/page")
     @PreAuthorize("hasAnyRole('WAREHOUSE','ADMIN')")
     public Page<Summary> fulfillment(@RequestParam(defaultValue="") @Size(max=120)String q,
         @RequestParam(defaultValue="all") @Pattern(regexp="all|PENDING_CONFIRM|CONFIRMED|SHIPPED|COMPLETED|CANCELLED")String status,
         @RequestParam(defaultValue="1") @Min(1) @Max(1000000)int page,
-        @RequestParam(defaultValue="8") @Min(1) @Max(100)int size){return service.orders(null,q,status,page,size);}
+        @RequestParam(defaultValue="8") @Min(1) @Max(100)int size,@RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE)java.time.LocalDate from,@RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE)java.time.LocalDate to,@RequestParam(required=false)java.math.BigDecimal minTotal,@RequestParam(required=false)java.math.BigDecimal maxTotal){return service.orders(null,q,status,page,size,QueryRange.of(from,to,minTotal,maxTotal));}
     @GetMapping("/api/dashboard")
     public Dashboard dashboard(Authentication auth){
         boolean warehouse=auth.getAuthorities().stream().anyMatch(a->a.getAuthority().equals("ROLE_WAREHOUSE"));

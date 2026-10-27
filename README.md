@@ -1,6 +1,6 @@
 # StockFlow
 
-单仓库存与订单履约系统，面向 Java 后端学习与实习项目展示。当前实现 **持久化账号、订单履约闭环、库存流水、低库存预警、盘点对账与操作审计**，业务核心独立编写，未复制课程项目或使用课程数据库。
+单仓库存与订单履约系统，面向 Java 后端学习与实习项目展示。当前实现 **持久化账号、订单履约闭环、库存流水、低库存预警、盘点对账、操作审计、正式入库单与整单退货**，业务核心独立编写，未复制课程项目或使用课程数据库。
 
 ## 已实现
 
@@ -8,6 +8,9 @@
 - Spring Security 服务端会话；浏览器使用 HttpOnly / SameSite=Lax Cookie，写入操作校验 CSRF。
 - 买家、仓管、管理员角色与订单资源归属校验。公开注册固定为 BUYER。
 - 商品创建、详情查询、名称/价格编辑和上架/停用；商品、库存、订单全量分页与搜索；带操作键的幂等入库。
+- 订单明细保存下单时商品名称/编码/单价快照；商品后续改名不改历史，新旧明细明确区分，旧数据不补造历史名称。
+- 正式入库单：多行商品、来源说明、草稿/确认/取消、幂等创建与确认，整张单据的库存/流水/审计同事务。
+- 整单退货：仅本人已完成订单可申请，仓管核实收到且可再次销售后确认入库；取消申请、重复请求和并发确认不会重复入库，不涉及退款。
 - 多商品下单、规范化数量、服务端价格快照、请求内容指纹及幂等重放。
 - 下单预留、确认、取消释放、超时取消释放、仓管发货扣减、买家确认收货。
 - 订单状态、库存和流水在同一 MySQL 事务内更新；多 SKU 失败整体回滚。
@@ -19,10 +22,11 @@
 - 幂等盘点单：保存库存版本快照，确认时检查变化和预留下限，盘盈/盘亏、库存及审计同事务更新；支持取消与重复确认安全重放。
 - 只读库存对账：实存对累计流水，预留对累计流水与有效订单；显示差异，不自动修正。
 - 商品创建/编辑、安全库存与盘点的操作审计，记录操作人、前后值、请求编号；不保存凭据。
+- 日期范围筛选订单、流水、盘点、审计；订单可按金额范围筛选。页面地址保存查询条件和页码，支持刷新与返回恢复；订单、履约、库存按当前权限与筛选导出 CSV，最多10000条并防公式注入。
 - 按角色显示业务待办和真实七日趋势；表格复制编号、重置筛选、每页 8/20/50 条、固定表头，更新失败保留旧数据。
 - 墨蓝深色界面、薄荷绿光感、全界面粒子背景、分层流动与鼠标连线；支持标准/低密度/关闭、暂停/恢复、减少动态效果、离屏停止绘制，保留表格可读性和手机布局。
 
-当前没有接入真实支付、物流、找回密码、管理员用户维护、Redis、RabbitMQ 或 outbox。确认订单是模拟业务操作，不产生支付行为。
+当前没有接入真实支付、退款、物流、找回密码、管理员用户维护、Redis、RabbitMQ 或 outbox。退货只记录实物退回与入库。确认订单是模拟业务操作，不产生支付行为。
 
 ## 技术与运行边界
 
@@ -47,7 +51,9 @@ Maven 未在 PATH / MAVEN_HOME 时，为 Invoke-Local.ps1 传入 -Maven 指定 m
 
 打开 [本地工作台](http://127.0.0.1:8082)。演示账号 buyer、buyer2、warehouse、admin 的初始口令见本机 .local/demo-login.txt；注册账号使用自己设置的密码。登录会话在 30 分钟无活动后过期，退出会使当前会话立即失效。
 
-升级脚本只操作 stockflow_dev / stockflow_test，按文件名顺序执行 db/migrations 中的增量 SQL。V002 增加 app_user 和订单 cancel_reason；V003 增加商品安全库存和订单阶段时间，保留原商品、订单及演示用户 ID 1–4。新用户编号从 100 起分配；重启只插入缺失演示账号，不覆盖已有密码。V004 增加盘点、审计、流水盘点引用与库存版本号。SQL 位于 [V004 升级文件](db/migrations/V004__audit_reconciliation_and_stocktakes.sql)、[V002 升级文件](db/migrations/V002__accounts_and_fulfillment.sql) 与 [V003 升级文件](db/migrations/V003__stock_policy_and_order_times.sql)；其他环境需要先审阅并应用对应升级。已有库启动新版前执行升级，首次建库的 schema.sql 已包含这些字段。
+数据库升级已统一由 Flyway 在应用启动时处理，`spring.sql.init.mode=never`；不再每次重放全部 SQL。`Update-LocalDatabase.ps1` 保留兼容入口，只提示启动当前 JAR 执行迁移。首次空库执行 B004 基线、V005 商品快照、V006 业务单据；现有无历史表的数据库仅在结构匹配已知 V004 时登记版本4后升级，未知或损坏结构拒绝自动接管。迁移不会删除原业务数据，老订单名称/编码快照保持 NULL。
+
+运行时唯一迁移脚本位于 `src/main/resources/db/migration`。根目录 `db/migrations` 保留历史审阅资料；旧 `schema.sql` 仅保留迁移说明，不再负责建表。禁止对升级后的数据库手工重放旧脚本。
 
 开发数据库：127.0.0.1:3308 / stockflow_dev；测试数据库：同实例的 stockflow_test，使用不同数据库用户与密码。课程库 zzyl10 没有参与升级。
 
@@ -71,13 +77,20 @@ Maven 未在 PATH / MAVEN_HOME 时，为 Invoke-Local.ps1 传入 -Maven 指定 m
 | 仓管发货 | 已发货 | on_hand 与 reserved 同时减少 |
 | 买家确认收货 | 已完成 | 无 |
 
-库存始终满足 on_hand >= reserved >= 0。确认后的订单不开放取消；支付退款与售后不在范围内。同一成功操作重试返回当前结果，不重复改动库存。
+库存始终满足 on_hand >= reserved >= 0。确认后的订单不开放取消；已完成订单可走独立整单退货流程，原订单状态保持已完成；真实支付、退款与换货不在范围内。同一成功操作重试返回当前结果，不重复改动库存。
 
 ## API
 
 | 请求 | 用途 |
 |---|---|
-| GET /api/health | 进程存活与阶段，不代表数据库健康 |
+| GET /api/health | 进程存活，不代表数据库就绪 |
+| GET /api/health/readiness | 匿名可读的数据库就绪结果，失败503，不公开连接细节 |
+| GET /api/runtime/metrics | 仓管/管理员可读的请求次数、耗时、状态分类及超时任务计数 |
+| GET /api/orders/export、/api/fulfillment/orders/export、/api/inventory/export | 按权限与当前筛选导出CSV，超过10000条返回422 |
+| GET / POST /api/receipts | 仓管/管理员分页查询与幂等建立入库单 |
+| GET /api/receipts/{id}；POST /{id}/confirm 或 /cancel | 入库单详情、确认或取消 |
+| GET / POST /api/returns | 买家本人／仓管全量查询；买家申请本人已完成订单整单退货 |
+| GET /api/returns/{id}；POST /{id}/confirm 或 /cancel | 退货详情、仓管确认验收入库或本人取消申请 |
 | GET /api/auth/csrf | 取得 CSRF token/headerName |
 | POST /api/auth/register | JSON 买家注册，201，不自动登录 |
 | POST /api/auth/login | 表单编码登录，200，创建/轮换会话 |
@@ -140,7 +153,7 @@ node --test src/test/frontend/*.test.mjs
 .\tools\Invoke-Local.ps1 -Action test
 ```
 
-当前自动化验证：**73 项 Java/MySQL 测试、73 项前端测试通过，项目打包成功**；真实浏览器已走通账号与订单流程、定时到期释放和悬停动画。详细记录见 [执行记录](docs/progress.md) 与 [UI 验收](design-qa.md)。真实 MySQL 测试覆盖事务、并发库存、请求幂等、注册唯一性、会话/CSRF、状态竞争、重复操作、超时释放及失败回滚。测试通过只代表相应范围，不是生产认证。本轮附带有条件的本地并发测量，见 [盘点与交付验收](docs/operations-hardening-qa.md)。
+当前自动化验证：**96项常规 Java/MySQL 测试通过；1项大数据测量单独通过；89项前端测试通过，项目打包成功**；真实浏览器已走通账号与订单流程、定时到期释放和悬停动画。详细记录见 [执行记录](docs/progress.md) 与 [UI 验收](design-qa.md)。真实 MySQL 测试覆盖事务、并发库存、请求幂等、注册唯一性、会话/CSRF、状态竞争、重复操作、超时释放及失败回滚。测试通过只代表相应范围，不是生产认证。本轮附带有条件的本地并发测量，见 [盘点与交付验收](docs/operations-hardening-qa.md)。
 本机运行目录与凭据均忽略提交。GitHub Actions 已实际执行前端/Java/MySQL测试及 Docker Compose 构建、启动和接口检查；查看 [PR 检查](https://github.com/1028706210/StockFlow/pull/1/checks) 与 [首轮通过记录](https://github.com/1028706210/StockFlow/actions/runs/40332898399)。
 
 [Figma/Canva 设计来源](docs/UI-DESIGN.md) · [初始业务设计](docs/specs/2026-10-22-stockflow-design.md) · [本轮设计](docs/specs/2026-10-23-account-fulfillment-design.md) · [本轮实施计划](docs/plans/2026-10-23-account-fulfillment.md)
@@ -161,6 +174,25 @@ node --test src/test/frontend/*.test.mjs
 
 ## 容器运行与盘点
 
-Docker Desktop 使用 Linux 容器时，运行 `./tools/Start-Container.ps1`；首次会生成忽略提交的 `.local/compose.env`，保存随机数据库/演示口令与端口，默认地址为 http://127.0.0.1:8083。MySQL 不映射宿主机端口。关闭用 `docker compose --env-file .local/compose.env down`，不删除数据卷。Compose 的首次建库和启动已在 GitHub Linux runner 验证，本机无 Docker Desktop，未声称做过本机容器验收。已有旧版容器数据卷升级时，需要审阅并执行增量 SQL 后再启动新版，不会自动删除或重建旧卷。
+Docker Desktop 使用 Linux 容器时，运行 `./tools/Start-Container.ps1`；首次会生成忽略提交的 `.local/compose.env`，保存随机数据库/演示口令与端口，默认地址为 http://127.0.0.1:8083。MySQL 不映射宿主机端口。关闭用 `docker compose --env-file .local/compose.env down`，不删除数据卷。Compose 的首次建库和启动已在 GitHub Linux runner 验证，本机无 Docker Desktop，未声称做过本机容器验收。已有旧版容器数据卷由启动时的 Flyway 校验并升级；无法识别的旧结构会停止启动，保留数据供人工核对，不会自动删除或重建旧卷。
 
 仓管在“库存盘点”或商品详情建立盘点，填写实际数量和原因，再确认调整。草稿建立后任何收发、预留或释放均使原快照失效，即使数量恢复原值也需要重新盘点；安全库存规则调整不改变实盘快照版本。确认后有差额才写入 ADJUST_IN / ADJUST_OUT 流水，零差额仍保留确认审计。盘点不能用来绕过订单预留或修复丢失的历史流水；对账只揭示差异。
+
+
+## 业务咨询助手
+
+登录工作台后，点击右下角“咨询助手”。可询问业务规则、查询在售商品与买家本人订单；直接使用当前登录会话，不用重复输入密码。退出或切换账号会清空对话并丢弃旧请求结果。支持快捷问题、失败重试、Enter发送、Shift+Enter换行、Escape关闭和手机布局。
+
+聊天为规则与只读数据咨询，不代替确认/取消/发货操作。工作台内聊天无需启动 Node 进程；独立页面在 [Node聊天页](http://127.0.0.1:8787)，需要另启动 ../Node.js 项目。共享源码在 ../Node.js/web，规则在 ../Node.js/config/knowledge.json，通过其 tools/Install-StockFlowChat.ps1 同步后重新打包。
+
+本轮74项前端测试、真实Edge浏览器验收通过，静态资源已装入JAR；Java/MySQL测试本轮未运行。详见 [聊天验收](docs/chat-assistant-qa.md)。
+
+## 2026-10-27 完整业务与可靠性改进
+
+订单历史快照、日期/金额筛选、查询地址恢复、CSV导出、入库单、整单退货、Flyway保留数据升级、真实就绪检查和受限运行指标均已接入。入口为“入库单”“退货单”；买家在已完成订单详情中发起退货，仓管在退货详情勾选已核实实物后确认。单据确认与流水可相互追踪。
+
+`/api/runtime/metrics` 只返回固定数量的累积计数，不保存请求正文、密码或任意用户标签。请求耗时为累计纳秒，可除以请求次数计算平均值；超时任务包含批次、处理成功、订单失败和查询批次失败。
+
+大数据测量仅在设置 `STOCKFLOW_LARGE_DATA_EVIDENCE=true` 时执行，会清理命名为 `stockflow_test` 的测试业务表；迁移破坏性夹具只允许 `stockflow_test_migration`。CI会运行两者并保存报告。配置与完整条件见 [本轮验收](docs/business-reliability-qa.md) 和 [测量样本](docs/evidence/2026-10-27-large-data.json)。
+
+浏览器控制目前被本机Work设置关闭，因此本轮没有声称桌面/手机真实页面验收通过；已完成HTTP/MySQL、前端状态及问答回归、静态模块加载与JAR运行验证。此前截图仅代表对应历史版本。

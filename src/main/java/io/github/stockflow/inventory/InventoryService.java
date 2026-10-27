@@ -31,8 +31,9 @@ public class InventoryService {
         if(mapper.policy(skuId,policy.safetyStock())!=1)throw ApiException.notFound();
         var after=mapper.get(skuId);if(before.safetyStock()!=after.safetyStock())audit.record(actor,"STOCK_POLICY","SKU",skuId,after.code(),java.util.Map.of("safetyStock",before.safetyStock()),java.util.Map.of("safetyStock",after.safetyStock()),requestId);return after;
     }
-    public LedgerPage ledger(String q,String type,Long skuId,Long beforeId,int limit){
-        var rows=mapper.ledgerPage(searchPattern(q),type,skuId,beforeId,limit+1);
+    public LedgerPage ledger(String q,String type,Long skuId,Long beforeId,int limit){return ledger(q,type,skuId,beforeId,limit,io.github.stockflow.workbench.QueryRange.of(null,null,null,null));}
+    public LedgerPage ledger(String q,String type,Long skuId,Long beforeId,int limit,io.github.stockflow.workbench.QueryRange range){
+        var rows=mapper.ledgerPage(searchPattern(q),type,skuId,beforeId,limit+1,range);
         boolean more=rows.size()>limit;
         var items=List.copyOf(rows.subList(0,Math.min(rows.size(),limit)));
         return new LedgerPage(items,more?items.get(items.size()-1).id():null);

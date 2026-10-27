@@ -22,10 +22,16 @@ public class WorkbenchService {
         var pattern=searchPattern(q);
         return page(mapper.stockCount(pattern,status),page,size,offset->mapper.stocks(pattern,status,offset,size));
     }
-    public Page<Summary> orders(Long buyer,String q,String status,int page,int size){
+    public Page<Summary> orders(Long buyer,String q,String status,int page,int size){return orders(buyer,q,status,page,size,QueryRange.of(null,null,null,null));}
+    public Page<Summary> orders(Long buyer,String q,String status,int page,int size,QueryRange range){
         var pattern=searchPattern(q);
-        return page(mapper.orderCount(buyer,pattern,status),page,size,offset->mapper.orders(buyer,pattern,status,offset,size));
+        return page(mapper.orderCount(buyer,pattern,status,range),page,size,offset->mapper.orders(buyer,pattern,status,offset,size,range));
     }
+    public List<Summary> exportOrders(Long buyer,String q,String status,QueryRange range){
+        var pattern=searchPattern(q);if(mapper.orderCount(buyer,pattern,status,range)>10000)throw new ApiException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,"EXPORT_LIMIT","Narrow filters to at most10000 records");
+        return mapper.orders(buyer,pattern,status,0,10000,range);
+    }
+    public List<StockRow> exportStocks(String q,String status){var pattern=searchPattern(q);if(mapper.stockCount(pattern,status)>10000)throw new ApiException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,"EXPORT_LIMIT","Narrow filters to at most10000 records");return mapper.stocks(pattern,status,0,10000);}
     public StockRow stock(long skuId){var row=mapper.stock(skuId);if(row==null)throw ApiException.notFound();return row;}
     public Dashboard dashboard(long buyer,boolean warehouse){return warehouse?mapper.warehouseDashboard():mapper.buyerDashboard(buyer);}
     private static String searchPattern(String q){return "%"+q.trim().replace("!","!!").replace("%","!%").replace("_","!_")+"%";}

@@ -45,5 +45,7 @@ public class StocktakeService {
         mapper.cancel(id);var result=get(id);audit.record(actor,"STOCKTAKE_CANCEL","STOCKTAKE",id,row.skuCode()+" · "+row.skuName(),row,result,requestId);return result;
     }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
-    public Page<Stocktake> list(String q,String status,int page,int size){var pattern=AuditService.pattern(q);long total=mapper.stocktakeCount(pattern,status),pages=Math.max(1,(total+size-1)/size);int current=(int)Math.min(page,pages);return new Page<>(mapper.stocktakes(pattern,status,(long)(current-1)*size,size),total,current,size,pages);}
+    public Page<Stocktake> list(String q,String status,int page,int size){return list(q,status,page,size,io.github.stockflow.workbench.QueryRange.of(null,null,null,null));}
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public Page<Stocktake> list(String q,String status,int page,int size,io.github.stockflow.workbench.QueryRange range){var pattern=AuditService.pattern(q);long total=mapper.stocktakeCount(pattern,status,range),pages=Math.max(1,(total+size-1)/size);int current=(int)Math.min(page,pages);return new Page<>(mapper.stocktakes(pattern,status,(long)(current-1)*size,size,range),total,current,size,pages);}
 }

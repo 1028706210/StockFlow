@@ -101,3 +101,8 @@ Remaining boundaries: real payments/logistics, password recovery, administrative
 ## 2026-10-26 盘点、审计、对账与交付
 
 已实现盘点草稿/确认/取消、库存版本检查、盘盈盘亏流水、只读对账与事务内审计。前端增加角色待办、真实七日趋势、表格操作、失败数据保留与粒子密度；附独立Windows启动和Compose。73项Java/MySQL、73项前端测试通过，GitHub测试与容器启动实际通过。历史段落按原时间保留，最新范围、条件与证据见 [本轮验收](operations-hardening-qa.md)。
+
+
+## 2026-10-27 完整业务与可靠性
+
+完成历史快照、范围筛选和地址恢复、CSV、入库单、整单退货、Flyway、就绪与受限指标；当前后端97项可执行测试（大数据默认单独启用），前端89项。运行与限制以 [本轮记录](business-reliability-qa.md) 为准；旧记录保留其原验证时间。

@@ -31,7 +31,7 @@ class FulfillmentIntegrationTest {
 
     @BeforeEach void resetOnlyTheIsolatedTestSchema() {
         assertEquals("stockflow_test",jdbc.queryForObject("SELECT DATABASE()",String.class));
-        for(var table:List.of("operation_audit","inventory_ledger","stocktake","order_item","customer_order","inventory","sku"))
+        for(var table:List.of("operation_audit","inventory_ledger","return_item","customer_return","receipt_item","receipt_document","stocktake","order_item","customer_order","inventory","sku"))
             jdbc.update("DELETE FROM "+table);
     }
     Reply request(String user,String method,String path,String body) throws Exception {

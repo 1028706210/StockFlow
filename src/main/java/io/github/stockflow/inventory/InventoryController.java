@@ -23,11 +23,11 @@ public class InventoryController {
     public Stock policy(Authentication auth,@PathVariable @Positive long skuId,@Valid @RequestBody StockPolicy policy,jakarta.servlet.http.HttpServletRequest http){return service.policy(Actor.id(auth),skuId,policy,(String)http.getAttribute("requestId"));}
     @GetMapping("/ledger")
     public LedgerPage ledger(@RequestParam(defaultValue="") @jakarta.validation.constraints.Size(max=120) String q,
-        @RequestParam(defaultValue="") @jakarta.validation.constraints.Pattern(regexp="|INBOUND|RESERVE|RELEASE|SHIP|ADJUST_IN|ADJUST_OUT") String type,
+        @RequestParam(defaultValue="") @jakarta.validation.constraints.Pattern(regexp="|INBOUND|RESERVE|RELEASE|SHIP|ADJUST_IN|ADJUST_OUT|RETURN_IN") String type,
         @RequestParam(required=false) @Positive Long skuId,
         @RequestParam(required=false) @Positive Long beforeId,
-        @RequestParam(defaultValue="20") @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(100) int limit){
-        return service.ledger(q,type,skuId,beforeId,limit);
+        @RequestParam(defaultValue="20") @jakarta.validation.constraints.Min(1) @jakarta.validation.constraints.Max(100) int limit,@RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE)java.time.LocalDate from,@RequestParam(required=false) @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE)java.time.LocalDate to){
+        return service.ledger(q,type,skuId,beforeId,limit,io.github.stockflow.workbench.QueryRange.of(from,to,null,null));
     }
     @GetMapping("/alerts")
     public AlertPage alerts(@RequestParam(defaultValue="") @jakarta.validation.constraints.Size(max=120) String q,

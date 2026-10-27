@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline} from '../../main/resources/static/ui-model.mjs';
 
+import {parseHash,queryHash,queryParams,validateRange,snapshotLabel} from '../../main/resources/static/query-state.mjs';
 class Element {
   constructor(id=''){this.id=id;this.dataset={};this.children=[];this.listeners={};this.fields=new Map();this.value='';this.open=false;this.disabled=false;this.hidden=false;this.ownText='';this.classList={add(){},remove(){},toggle(){},contains(){return false;}};}
   set textContent(text){this.ownText=String(text);this.children=[];}
@@ -19,15 +20,15 @@ class Element {
 }
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
 function workbench(requestJson=async()=>({status:200,data:[]})){
-  const elements=new Map();
+  const elements=new Map(),sessionEvents=[],windowListeners={};
   const get=selector=>{if(!elements.has(selector))elements.set(selector,new Element(selector.replace('#','')));return elements.get(selector);};
   get('#cart-line-template').content={firstElementChild:new Element('cart-template')};
   const document={addEventListener(){},querySelector:get,querySelectorAll:selector=>selector==='.cart-line'?get('#cart-lines').children:[],createElement:tag=>new Element(tag),createTextNode:text=>{const e=new Element();e.textContent=text;return e;}};
-  const context={document,window:{addEventListener(){}},location:{hash:''},Node:Element,Option:class extends Element{constructor(text,value){super();this.textContent=text;this.value=value;}},Intl,Date,Map,Set,Number,String,Error,AbortSignal,crypto:{randomUUID:()=> 'new-key'},setTimeout:()=>0,clearTimeout(){},parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline,URLSearchParams,requestJson,console};
+  const context={document,window:{addEventListener(type,fn){windowListeners[type]=fn;},dispatchEvent(event){sessionEvents.push(event);}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},location:{hash:''},Node:Element,Option:class extends Element{constructor(text,value){super();this.textContent=text;this.value=value;}},Intl,Date,Map,Set,Number,String,Error,AbortSignal,crypto:{randomUUID:()=> 'new-key'},setTimeout:()=>0,clearTimeout(){},parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline,URLSearchParams,parseHash,queryHash,queryParams,validateRange,snapshotLabel,createDocumentUI:()=>({reset(){},show(){},createReceipt(){},createReturn(){}}),requestJson,console};
   let source=readFileSync(new URL('../../main/resources/static/app.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
-  source+='\nglobalThis.probe={state,loadOperations,openStocktake,showOrder,withForm,openReceipt,clearSession,openOrderCommand,loadInventoryReport:typeof loadInventoryReport==="function"?loadInventoryReport:null,openAlertReceipt:typeof openAlertReceipt==="function"?openAlertReceipt:null,openStockPolicy:typeof openStockPolicy==="function"?openStockPolicy:null,loadMainList:typeof loadMainList==="function"?loadMainList:null,openProduct:typeof openProduct==="function"?openProduct:null,rememberProducts:typeof rememberProducts==="function"?rememberProducts:null,openProductPicker:typeof openProductPicker==="function"?openProductPicker:null,openProductEditor:typeof openProductEditor==="function"?openProductEditor:null,pickProduct};';
+  source+='\nglobalThis.probe={state,showPage,activateSession,loadOperations,openStocktake,showOrder,withForm,openReceipt,clearSession,openOrderCommand,loadInventoryReport:typeof loadInventoryReport==="function"?loadInventoryReport:null,openAlertReceipt:typeof openAlertReceipt==="function"?openAlertReceipt:null,openStockPolicy:typeof openStockPolicy==="function"?openStockPolicy:null,loadMainList:typeof loadMainList==="function"?loadMainList:null,openProduct:typeof openProduct==="function"?openProduct:null,rememberProducts:typeof rememberProducts==="function"?rememberProducts:null,openProductPicker:typeof openProductPicker==="function"?openProductPicker:null,openProductEditor:typeof openProductEditor==="function"?openProductEditor:null,pickProduct};';
   vm.runInNewContext(source,context);
-  return {get,ui:context.probe};
+  return {get,ui:context.probe,sessionEvents,windowListeners,location:context.location,window:context.window};
 }
 test('入库提交期间不能重置操作标识',()=>{
   const {get,ui}=workbench();const original={skuId:1,quantity:5,operationKey:'original-key'};
@@ -190,9 +191,13 @@ test('订单列表的筛选结果不覆盖概览最近订单',async()=>{
   const {ui}=workbench(async()=>({data:{items:[],total:0,page:1,size:8,totalPages:1}}));ui.state.me={roles:['ROLE_BUYER']};ui.state.orders=[{id:7}];ui.state.queries.orders='不存在';
   await ui.loadMainList('orders',true);assert.equal(ui.state.orders.length,1);assert.equal(ui.state.orders[0].id,7);
 });
-test('历史订单包含未缓存商品时加载其名称和编码',async()=>{
-  const {ui,get}=workbench(async(...args)=>({data:args[2]==='/api/orders/7'?{id:7,status:'COMPLETED',total:2,items:[{skuId:301,quantity:1,unitPrice:2}]}:{id:301,name:'较早的商品',code:'OLD-301',price:3,active:false}}));
-  ui.state.me={roles:['ROLE_BUYER']};await ui.showOrder(7);assert.match(get('#order-detail-content').textContent,/较早的商品/);assert.match(get('#order-detail-content').textContent,/OLD-301/);
+test('历史订单缺少快照时显示未知名称，不读取当前商品冒充历史',async()=>{
+ const paths=[];const {get,ui}=workbench(async(_s,_m,path)=>{paths.push(path);return {data:{id:5,status:'COMPLETED',total:2,items:[{skuId:301,quantity:1,unitPrice:2}]}};});
+ await ui.showOrder(5);assert.match(get('#order-detail-content').textContent,/历史商品名称未知 · SKU #301/);assert.deepEqual(paths,['/api/fulfillment/orders/5']);
+});
+test('订单快照名称在当前商品重命名后保持下单时内容',async()=>{
+ const {get,ui}=workbench(async()=>({data:{id:5,status:'COMPLETED',total:2,items:[{skuId:301,skuName:'下单时名称',skuCode:'OLD',quantity:1,unitPrice:2}]}}));ui.state.products=[{id:301,name:'当前新名称',code:'NEW'}];
+ await ui.showOrder(5);assert.match(get('#order-detail-content').textContent,/下单时名称OLD/);assert.doesNotMatch(get('#order-detail-content').textContent,/当前新名称/);
 });
 test('商品抽屉发起入库后刷新该商品库存和流水',async()=>{
   const {ui,get}=workbench(async(...args)=>{
@@ -255,3 +260,31 @@ test('盘点确认进行中不能切换为另一张盘点',async()=>{
  const d=deferred(),{ui,get}=workbench(()=>d.promise);ui.state.me={roles:['ROLE_WAREHOUSE']};const original={id:3,status:'DRAFT'};ui.state.stocktakeDetail=original;
  const p=get('#stocktake-command-form').listeners.submit({preventDefault(){},submitter:{value:'confirm'},target:get('#stocktake-command-form')});await ui.openStocktake(4);assert.equal(ui.state.stocktakeDetail,original);assert.equal(get('#stocktake-cancel').disabled,true);d.reject(new Error('stock changed'));await p;assert.equal(get('#stocktake-cancel').disabled,false);assert.match(get('#stocktake-command-error').textContent,/stock changed/);
 });
+
+test('聊天会话在退出时发布清空，准备完成后可取得当前身份',()=>{
+  const {ui,sessionEvents,windowListeners}=workbench();
+  ui.state.me={id:1,username:'buyer',roles:['ROLE_BUYER']};ui.state.epoch=7;
+  windowListeners['stockflow:chat-ready']();
+  assert.equal(sessionEvents.at(-1).detail.me.username,'buyer');
+  assert.equal(sessionEvents.at(-1).detail.epoch,7);
+  ui.clearSession();
+  assert.equal(sessionEvents.at(-1).type,'stockflow:session');
+  assert.equal(sessionEvents.at(-1).detail.me,null);
+  assert.equal(sessionEvents.at(-1).detail.epoch,8);
+});
+
+test('刷新或后退到带查询的 hash 会恢复控件、页码和服务端日期金额查询',async()=>{
+ const paths=[];const {get,ui,location}=workbench(async(_s,_m,path)=>{paths.push(path);return {data:{items:[],total:0,page:3,size:20,totalPages:3}};});
+ ui.state.me={id:1,roles:['ROLE_BUYER']};ui.state.loaded=true;location.hash='#orders?q=SF-99&status=COMPLETED&page=3&size=20&from=2026-10-01&to=2026-10-27&minTotal=1.20&maxTotal=9.00';ui.showPage();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(get('#orders-search').value,'SF-99');assert.equal(get('#orders-status').value,'COMPLETED');assert.equal(ui.state.lists.orders.page,3);assert.match(paths.at(-1),/from=2026-10-01/);assert.match(paths.at(-1),/minTotal=1.20/);
+ location.hash='#orders?q=older&page=1&size=8';ui.showPage();assert.equal(get('#orders-search').value,'older');assert.equal(get('#orders-from').value,'');assert.equal(get('#orders-minTotal').value,'');
+});
+test('日期范围无效时保留列表并展示错误，不发送请求',async()=>{
+ let calls=0;const {get,ui}=workbench(async()=>{calls++;return {data:{items:[]}};});ui.state.me={roles:['ROLE_BUYER']};get('#orders-from').value='2026-10-27';get('#orders-to').value='2026-10-01';await ui.loadMainList('orders');assert.equal(calls,0);assert.match(ui.state.lists.orders.error,/日期/);
+});
+
+test('浏览器禁用存储时仍能登录并显示工作台',async()=>{
+ const {ui,get,window}=workbench(async(_s,_m,path)=>({data:path.includes('/page')?{items:[],total:0,page:1,size:8,totalPages:1}:path==='/api/dashboard'?{productCount:0,lowStockCount:0,onHand:0,reserved:0}:[]}));
+ Object.defineProperty(window,'sessionStorage',{get(){throw new Error('storage disabled');}});await ui.activateSession({id:3,username:'warehouse',roles:['ROLE_WAREHOUSE']});assert.equal(get('#workspace').hidden,false);assert.equal(ui.state.me.id,3);
+});
+test('对账默认只显示差异，显式 false 才显示全部',()=>{const {ui,get,location}=workbench();ui.state.me={roles:['ROLE_WAREHOUSE']};location.hash='#reconciliation';ui.showPage();assert.equal(get('#reconciliation-only').checked,true);location.hash='#reconciliation?mismatchOnly=false';ui.showPage();assert.equal(get('#reconciliation-only').checked,false);});

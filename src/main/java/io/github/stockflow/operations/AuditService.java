@@ -17,9 +17,11 @@ public class AuditService {
         mapper.audit(actor,action,entityType,id,label,before==null?null:json.writeValueAsString(before),after==null?null:json.writeValueAsString(after),requestId);
     }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
-    public Page<AuditView> list(String q,String action,int page,int size){
-        var pattern=pattern(q);long total=mapper.auditCount(pattern,action),pages=Math.max(1,(total+size-1)/size);int current=(int)Math.min(page,pages);
-        var rows=mapper.audits(pattern,action,(long)(current-1)*size,size).stream().map(row->new AuditView(row.id(),row.actorId(),row.username(),row.action(),row.entityType(),row.entityId(),row.entityLabel(),row.beforeJson()==null?json.nullNode():json.readTree(row.beforeJson()),row.afterJson()==null?json.nullNode():json.readTree(row.afterJson()),row.requestId(),row.createdAt())).toList();
+    public Page<AuditView> list(String q,String action,int page,int size){return list(q,action,page,size,io.github.stockflow.workbench.QueryRange.of(null,null,null,null));}
+    @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)
+    public Page<AuditView> list(String q,String action,int page,int size,io.github.stockflow.workbench.QueryRange range){
+        var pattern=pattern(q);long total=mapper.auditCount(pattern,action,range),pages=Math.max(1,(total+size-1)/size);int current=(int)Math.min(page,pages);
+        var rows=mapper.audits(pattern,action,(long)(current-1)*size,size,range).stream().map(row->new AuditView(row.id(),row.actorId(),row.username(),row.action(),row.entityType(),row.entityId(),row.entityLabel(),row.beforeJson()==null?json.nullNode():json.readTree(row.beforeJson()),row.afterJson()==null?json.nullNode():json.readTree(row.afterJson()),row.requestId(),row.createdAt())).toList();
         return new Page<>(rows,total,current,size,pages);
     }
     @Transactional(readOnly=true,isolation=Isolation.REPEATABLE_READ)

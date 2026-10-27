@@ -23,6 +23,7 @@ public interface WorkbenchMapper {
         +"<if test='buyer == null'> OR CONVERT(buyer_id,CHAR CHARACTER SET utf8mb4) LIKE #{pattern} ESCAPE '!'</if>)"
         +"<if test='buyer != null'> AND buyer_id=#{buyer}</if>"
         +"<if test='status != &quot;all&quot;'> AND status=#{status}</if>";
+    String ORDER_RANGE="<if test='range.from != null'> AND created_at &gt;= #{range.from}</if><if test='range.toExclusive != null'> AND created_at &lt; #{range.toExclusive}</if><if test='range.minTotal != null'> AND total &gt;= #{range.minTotal}</if><if test='range.maxTotal != null'> AND total &lt;= #{range.maxTotal}</if>";
     @Select("<script>SELECT COUNT(*)"+SKU_MATCH+"</script>")
     long skuCount(@Param("pattern")String pattern,@Param("status")String status);
     @Select("<script>SELECT s.id,s.code,s.name,s.price,s.active"+SKU_MATCH+" ORDER BY s.id DESC LIMIT #{size} OFFSET #{offset}</script>")
@@ -33,10 +34,10 @@ public interface WorkbenchMapper {
     List<StockRow> stocks(@Param("pattern")String pattern,@Param("status")String status,@Param("offset")long offset,@Param("size")int size);
     @Select("SELECT "+STOCK_COLUMNS+" FROM inventory i JOIN sku s ON s.id=i.sku_id WHERE i.sku_id=#{skuId}")
     StockRow stock(long skuId);
-    @Select("<script>SELECT COUNT(*)"+ORDER_MATCH+"</script>")
-    long orderCount(@Param("buyer")Long buyer,@Param("pattern")String pattern,@Param("status")String status);
-    @Select("<script>SELECT "+OrderMapper.SUMMARY_COLUMNS+ORDER_MATCH+" ORDER BY id DESC LIMIT #{size} OFFSET #{offset}</script>")
-    List<Summary> orders(@Param("buyer")Long buyer,@Param("pattern")String pattern,@Param("status")String status,@Param("offset")long offset,@Param("size")int size);
+    @Select("<script>SELECT COUNT(*)"+ORDER_MATCH+ORDER_RANGE+"</script>")
+    long orderCount(@Param("buyer")Long buyer,@Param("pattern")String pattern,@Param("status")String status,@Param("range")QueryRange range);
+    @Select("<script>SELECT "+OrderMapper.SUMMARY_COLUMNS+ORDER_MATCH+ORDER_RANGE+" ORDER BY id DESC LIMIT #{size} OFFSET #{offset}</script>")
+    List<Summary> orders(@Param("buyer")Long buyer,@Param("pattern")String pattern,@Param("status")String status,@Param("offset")long offset,@Param("size")int size,@Param("range")QueryRange range);
     @Select("SELECT (SELECT COUNT(*) FROM sku) AS product_count,"
         +"(SELECT COALESCE(SUM(on_hand),0) FROM inventory) AS on_hand,"
         +"(SELECT COALESCE(SUM(reserved),0) FROM inventory) AS reserved,"

@@ -14,6 +14,7 @@ public class OrderExpiration {
     private final OrderService service;
     private final boolean enabled;
     private long afterId;
+    @org.springframework.beans.factory.annotation.Autowired private io.github.stockflow.runtime.RuntimeMetrics metrics;
     public OrderExpiration(OrderMapper orders,OrderService service,@Value("${stockflow.expiration.enabled:true}")boolean enabled){
         this.orders=orders;this.service=service;this.enabled=enabled;
     }
@@ -21,16 +22,18 @@ public class OrderExpiration {
     public void scheduled(){if(enabled)expireBatch();}
 
     public synchronized void expireBatch(){
-        var ids=orders.expiredIds(afterId);
-        if(ids.isEmpty()&&afterId!=0){
-            afterId=0;
+        if(metrics!=null)metrics.expiryBatch();
+        java.util.List<Long> ids;
+        try{
             ids=orders.expiredIds(afterId);
-        }
+            if(ids.isEmpty()&&afterId!=0){afterId=0;ids=orders.expiredIds(afterId);}
+        }catch(RuntimeException error){if(metrics!=null)metrics.expiryBatchFailed();throw error;}
         for(long id:ids){
             // Advance even on failure so damaged reservations cannot block later orders.
             afterId=id;
-            try{service.expire(id);}
+            try{service.expire(id);if(metrics!=null)metrics.expirySucceeded();}
             catch(RuntimeException error){
+                if(metrics!=null)metrics.expiryFailed();
                 LoggerFactory.getLogger(OrderExpiration.class).warn("Could not expire order {}; will retry in a later batch",id,error);
             }
         }
