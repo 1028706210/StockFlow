@@ -204,3 +204,5 @@ Docker Desktop 使用 Linux 容器时，运行 `./tools/Start-Container.ps1`；�
 ## 可维护性分阶段改进
 
 2026-10-29 第一阶段已拆出通用界面工具和库存流水／预警模块，保持原生 JavaScript、界面和业务接口。89项前端回归通过，JAR打包及匿名静态模块HTTP加载检查通过；本地没有重跑后端全套或完成新页面实操。见 [阶段计划](docs/plans/2026-10-29-maintainability-phases.md) 与 [第一阶段记录](docs/maintainability-stage1-qa.md)。以后新增文档、界面文案及说明统一使用简体中文。
+
+2026-10-29 第二阶段已将入库单、退货单列表的明细改为当前页批量查询，100条页面的单据SELECT由实测102次降至3次，完整响应和权限保持一致。已补5项真实MySQL查询回归；全量后端101项通过、前端89项通过、Maven verify成功。本地未开启的1项大量数据测试由云端另行执行。参见[第二阶段记录](docs/maintainability-stage2-qa.md)和[验证数据](docs/evidence/maintainability-stage2.json)。文档总册1.1保留原内容基线，本阶段变更以增量记录为准。

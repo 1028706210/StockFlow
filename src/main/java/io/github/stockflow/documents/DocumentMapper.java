@@ -17,6 +17,16 @@ public interface DocumentMapper {
     @Insert("INSERT INTO receipt_item(receipt_id,sku_id,sku_code,sku_name,quantity) VALUES(#{id},#{sku},#{code},#{name},#{quantity})")
     int receiptItem(@Param("id")long id,@Param("sku")long sku,@Param("code")String code,@Param("name")String name,@Param("quantity")int quantity);
     @Select("SELECT id,sku_id,sku_code,sku_name,quantity FROM receipt_item WHERE receipt_id=#{id} ORDER BY sku_id") List<ReceiptItem> receiptItems(long id);
+    @Select("""
+        <script>
+        SELECT receipt_id, id, sku_id, sku_code, sku_name, quantity
+        FROM receipt_item WHERE receipt_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+        ORDER BY receipt_id, sku_id
+        </script>
+        """)
+    List<ReceiptItemRow> receiptItemsByDocuments(@Param("ids") List<Long> ids);
+
     @Update("UPDATE receipt_document SET status=#{state},confirmed_at=CASE WHEN #{state}='CONFIRMED' THEN CURRENT_TIMESTAMP(6) ELSE confirmed_at END WHERE id=#{id}")
     int receiptState(@Param("id")long id,@Param("state")String state);
     String RECEIPT_MATCH=" FROM receipt_document WHERE (source LIKE #{pattern} ESCAPE '!' OR CONVERT(id,CHAR CHARACTER SET utf8mb4) LIKE #{pattern} ESCAPE '!')<if test='status != &quot;all&quot;'> AND status=#{status}</if>";
@@ -34,6 +44,16 @@ public interface DocumentMapper {
     @Insert("INSERT INTO return_item(return_id,sku_id,sku_code,sku_name,quantity,unit_price) SELECT #{id},sku_id,sku_code,sku_name,quantity,unit_price FROM order_item WHERE order_id=#{order} ORDER BY sku_id")
     int copyReturnItems(@Param("id")long id,@Param("order")long order);
     @Select("SELECT id,sku_id,sku_code,sku_name,quantity,unit_price FROM return_item WHERE return_id=#{id} ORDER BY sku_id") List<ReturnItem> returnItems(long id);
+    @Select("""
+        <script>
+        SELECT return_id, id, sku_id, sku_code, sku_name, quantity, unit_price
+        FROM return_item WHERE return_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+        ORDER BY return_id, sku_id
+        </script>
+        """)
+    List<ReturnItemRow> returnItemsByDocuments(@Param("ids") List<Long> ids);
+
     @Update("UPDATE customer_return SET status=#{state},confirmed_at=CASE WHEN #{state}='CONFIRMED' THEN CURRENT_TIMESTAMP(6) ELSE confirmed_at END WHERE id=#{id}")
     int returnState(@Param("id")long id,@Param("state")String state);
     String RETURN_MATCH=" FROM customer_return WHERE (reason LIKE #{pattern} ESCAPE '!' OR CONVERT(id,CHAR CHARACTER SET utf8mb4) LIKE #{pattern} ESCAPE '!' OR CONVERT(order_id,CHAR CHARACTER SET utf8mb4) LIKE #{pattern} ESCAPE '!')<if test='buyer != null'> AND buyer_id=#{buyer}</if><if test='status != &quot;all&quot;'> AND status=#{status}</if>";
