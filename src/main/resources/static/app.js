@@ -1,13 +1,13 @@
+import {createUiHelpers} from '/assets/ui/ui-helpers.mjs';
+import {createInventoryReports,newInventoryReports} from '/assets/ui/inventory-reports.mjs';
 import {parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline} from '/ui-model.mjs';
 
 import {requestJson} from '/api-client.mjs';
 import {parseHash,queryHash,queryParams,validateRange,snapshotLabel} from '/query-state.mjs';
 import {createDocumentUI} from '/business-documents.mjs';
 
-const $ = selector => document.querySelector(selector);
-const all = selector => [...document.querySelectorAll(selector)];
-const money = value => new Intl.NumberFormat('zh-CN',{style:'currency',currency:'CNY'}).format(value);
-const time = value => value ? new Intl.DateTimeFormat('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value)) : '—';
+const ui = createUiHelpers(document, Node);
+const {$,all,money,time,node,button,message,failure,badge,cell,productCell,empty} = ui;
 const pages = {
   receipts:['入库单','GOODS RECEIPTS','建立入库草稿，核对实物后确认入库。'],
   returns:['退货单','ORDER RETURNS','整单退货申请与实物接收记录，不涉及退款。'],
@@ -23,28 +23,16 @@ const pages = {
   orders:['我的订单','MY ORDERS','查看订单进度、金额与商品明细。'],
   'new-order':['创建订单','CREATE AN ORDER','选择商品和数量，提交一笔新的订单。']
 };
-function newInventoryReports(){return Object.fromEntries(['ledger','alerts'].map(kind=>[kind,{items:[],cursor:null,history:[],nextCursor:null,sequence:0,loading:false,error:'',total:0,query:'',type:''}]));}
 function newMainLists(){return Object.fromEntries(['products','inventory','orders','fulfillment'].map(kind=>[kind,{items:[],total:0,page:1,size:8,totalPages:1,loading:false,error:'',sequence:0}]));}
 const state = {operations:newOperations(),stocktakeAttempt:null,stocktakeDetail:null,trends:[],trendsError:'',lists:newMainLists(),dashboard:null,productStatus:'all',productDetail:null,editingProduct:null,stockPolicy:null,picker:null,reports:newInventoryReports(),csrf:'',me:null,epoch:0,refreshId:0,loading:false,loaded:false,error:'',products:[],stocks:[],orders:[],fulfillment:[],pendingCommand:null,detailOrderId:null,
   queries:{products:'',inventory:'',orders:'',fulfillment:''},page:{products:1,inventory:1,orders:1,fulfillment:1},stockFilter:'all',ordersStatus:'all',fulfillmentStatus:'all',orderAttempt:null,lastOrder:null,receiptAttempt:null,receiptConfirmed:false};
 const warehouse = () => state.me?.roles.some(r => r==='ROLE_WAREHOUSE' || r==='ROLE_ADMIN');
 const buyer = () => state.me?.roles.includes('ROLE_BUYER');
 let toastTimer;
-function node(tag,text,className) {
-  const item=document.createElement(tag);
-  if(text!==undefined)item.textContent=text;
-  if(className)item.className=className;
-  return item;
-}
-function button(text,action,className='text-button') {
-  const item=node('button',text,className);item.type='button';item.addEventListener('click',action);return item;
-}
 function toast(message,error=false) {
   clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').className='toast'+(error?' error':'');$('#toast').hidden=false;
   toastTimer=setTimeout(()=>{$('#toast').hidden=true;},6500);
 }
-function message(selector,text='') {$(selector).textContent=text;$(selector).hidden=!text;}
-function failure(error) {return error.message || '操作未完成，请重试。';}
 async function request(method,path,body) {
   try{return await requestJson(()=>state,method,path,body);}
   catch(error){
@@ -198,19 +186,9 @@ async function loadMainList(kind,reset=false){
   }catch(error){if(error.stale||epoch!==state.epoch||list!==state.lists[kind]||sequence!==list.sequence)return;list.error=failure(error);}
   finally{if(epoch===state.epoch&&list===state.lists[kind]&&sequence===list.sequence){list.loading=false;renderTable(kind);}}
 }
-function badge(label,tone='neutral'){return node('span',label,'badge '+tone);}
 function orderBadge(status) {
   const labels={PENDING_CONFIRM:['待确认','pending'],CONFIRMED:['已确认','success'],CANCELLED:['已取消','neutral'],SHIPPED:['已发货','success'],COMPLETED:['已完成','success']};
   const [label,tone]=labels[status]||[status,'neutral'];return badge(label,tone);
-}
-function cell(row,text,className){const td=node('td',undefined,className);if(text instanceof Node)td.append(text);else td.textContent=text;row.append(td);return td;}
-function productCell(product,code){
-  const value=node('div');value.append(node('strong',product?.name || '商品 #'+(product?.id || '—')));
-  if(code)value.append(node('span',code,'subtext code'));return value;
-}
-function empty(target,title,description,action){
-  const container=$(target);container.replaceChildren(node('strong',title),node('p',description));
-  if(action)container.append(action);container.hidden=false;
 }
 function render(){
   if(!state.me)return;renderOverview();for(const kind of ['products','inventory','orders','fulfillment'])renderTable(kind);
@@ -486,62 +464,15 @@ $('#order-form').addEventListener('submit',event=>{
 });
 
 
-async function loadInventoryReport(kind,reset=true){
-  if(!warehouse())return;
-  const report=state.reports[kind],epoch=state.epoch,sequence=++report.sequence;
-  if(reset){
-    report.cursor=null;report.history=[];
-    report.query=$('#'+kind+'-search').value.trim();
-    report.type=kind==='ledger'?$('#ledger-type').value:'';
-
+const inventoryReports = createInventoryReports({
+  state, request, warehouse, ui, readQuery, persistQuery, openStockPolicy, openAlertReceipt,
+  onReference(kind, id) {
+    if (kind === 'orders') return showOrder(id, 'fulfillment');
+    if (kind === 'stocktakes') return openStocktake(id);
+    return documents.openDetail(kind, id);
   }
-  report.loading=true;report.error='';renderInventoryReport(kind);
-  const params=new URLSearchParams({limit:'20',q:report.query});
-  if(report.cursor!==null)params.set('beforeId',String(report.cursor));
-  if(kind==='ledger'&&report.type)params.set('type',report.type);
-  for(const key of ['from','to'])if(kind==='ledger'&&$('#ledger-'+key).value)params.set(key,$('#ledger-'+key).value);persistQuery(kind,{...readQuery(kind),...Object.fromEntries(params)});
-
-  try{
-    validateRange(Object.fromEntries(params));const {data}=await request('GET','/api/inventory/'+kind+'?'+params);
-    if(epoch!==state.epoch||report!==state.reports[kind]||sequence!==report.sequence)return;
-    report.items=data.items;report.nextCursor=data.nextCursor;report.total=data.total??data.items.length;
-  }catch(error){
-    if(error.stale||epoch!==state.epoch||report!==state.reports[kind]||sequence!==report.sequence)return;
-    report.error=failure(error);
-  }finally{
-    if(epoch===state.epoch&&report===state.reports[kind]&&sequence===report.sequence){report.loading=false;renderInventoryReport(kind);}
-  }
-}
-function renderInventoryReport(kind){
-  const report=state.reports[kind],body=$('#'+kind+'-body');body.replaceChildren();
-  $('#'+kind+'-loading').hidden=!report.loading;message('#'+kind+'-error',report.error);
-  $('#'+kind+'-total').textContent=report.loading||report.error?'—':String(report.total);
-  $('#'+kind+'-empty').hidden=true;
-  const types={INBOUND:['入库','success'],RESERVE:['订单预留','pending'],RELEASE:['取消释放','neutral'],RETURN_IN:['退货入库','success'],SHIP:['发货出库','success'],ADJUST_IN:['盘盈调整','success'],ADJUST_OUT:['盘亏调整','pending']};
-  const delta=value=>node('span',value>0?'+'+value:String(value),'delta '+(value>0?'positive':value<0?'negative':'neutral'));
-  for(const item of report.items){
-    const row=node('tr');
-    if(kind==='ledger'){
-      cell(row,time(item.createdAt),'code');cell(row,productCell(item,item.code));
-      const [label,tone]=types[item.operationType]||[item.operationType,'neutral'];cell(row,badge(label,tone));
-      cell(row,delta(item.onHandDelta),'number');cell(row,delta(item.reservedDelta),'number');
-      const reference=item.returnId?button('RT-'+item.returnId,()=>documents.openDetail('returns',item.returnId)):item.receiptId?button('RC-'+item.receiptId,()=>documents.openDetail('receipts',item.receiptId)):item.orderId?button('SF-'+item.orderId,()=>showOrder(item.orderId,'fulfillment')):item.stocktakeId?button('ST-'+item.stocktakeId,()=>openStocktake(item.stocktakeId)):node('span','—');if(reference.tagName!=='SPAN')reference.disabled=report.loading||!!report.error;cell(row,reference);
-      cell(row,item.actorId===0?'系统任务':'用户 #'+item.actorId,'code');
-    }else{
-      cell(row,productCell(item,item.code));cell(row,String(item.onHand),'number');cell(row,String(item.reserved),'number');cell(row,String(item.available),'number');
-      cell(row,String(item.safetyStock),'number');cell(row,node('strong','+'+item.shortage,'stock-shortage'),'number');
-      const actions=node('div',undefined,'cell-actions');const policy=button('调整规则',()=>openStockPolicy(item)),receipt=button('补货入库',()=>openAlertReceipt(item),'button secondary compact');policy.disabled=receipt.disabled=report.loading||!!report.error;actions.append(policy,receipt);cell(row,actions,'right');
-    }
-    body.append(row);
-  }
-  if(!report.loading&&!report.error&&!report.items.length)empty('#'+kind+'-empty',kind==='ledger'?'暂无匹配流水':'当前没有库存预警',kind==='ledger'?'调整搜索条件，或完成入库和订单操作后再查看。':'在售商品的可用量均未低于各自安全线，或没有匹配的搜索结果。');
-  const previous=button('上一页',()=>{report.cursor=report.history.pop()??null;loadInventoryReport(kind,false);},'button secondary');
-  const next=button('下一页',()=>{report.history.push(report.cursor);report.cursor=report.nextCursor;loadInventoryReport(kind,false);},'button secondary');
-  previous.disabled=report.loading||!!report.error||report.history.length===0;next.disabled=report.loading||report.error!==''||report.nextCursor===null;
-  if(report.error)$('#'+kind+'-error').append(button('重试查询',()=>loadInventoryReport(kind,false)));
-  $('#'+kind+'-pagination').replaceChildren(node('span',kind==='ledger'?'每页 20 条 · 按最新记录排序':'共 '+(report.loading||report.error?'—':report.total)+' 个商品 · 每页 20 条'),previous,node('span','第 '+(report.history.length+1)+' 页'),next);
-}
-for(const kind of ['ledger','alerts'])$('#'+kind+'-filters').addEventListener('submit',event=>{event.preventDefault();loadInventoryReport(kind);});
+});
+const {load: loadInventoryReport, render: renderInventoryReport} = inventoryReports;
 $('#inventory-insight').addEventListener('click',()=>navigate('alerts'));
 $('#hero-orders').addEventListener('click',()=>navigate('orders'));
 

@@ -2,6 +2,10 @@
 
 单仓库存与订单履约系统，面向 Java 后端学习与实习项目展示。当前实现 **持久化账号、订单履约闭环、库存流水、低库存预警、盘点对账、操作审计、正式入库单与整单退货**，业务核心独立编写，未复制课程项目或使用课程数据库。
 
+## 完整项目文档
+
+[文档中心](docs/handbook/README.md)提供需求规格、系统设计、业务规则、完整资料字典、API、部署运维、测试验收、使用手册及项目展示指南。文档1.1以33c830f为功能基准，补充第一阶段前端整理，明确区分实现、验证与后续规划。
+
 ## 已实现
 
 - MySQL 账号持久化、买家注册、BCrypt 密码哈希、登录、会话恢复和退出失效。
@@ -153,7 +157,7 @@ node --test src/test/frontend/*.test.mjs
 .\tools\Invoke-Local.ps1 -Action test
 ```
 
-当前自动化验证：**96项常规 Java/MySQL 测试通过；1项大数据测量单独通过；89项前端测试通过，项目打包成功**；真实浏览器已走通账号与订单流程、定时到期释放和悬停动画。详细记录见 [执行记录](docs/progress.md) 与 [UI 验收](design-qa.md)。真实 MySQL 测试覆盖事务、并发库存、请求幂等、注册唯一性、会话/CSRF、状态竞争、重复操作、超时释放及失败回滚。测试通过只代表相应范围，不是生产认证。本轮附带有条件的本地并发测量，见 [盘点与交付验收](docs/operations-hardening-qa.md)。
+2026-10-27 的验证记录：**96项常规 Java/MySQL 测试通过；1项大数据测量单独通过；89项前端测试通过，项目打包成功**。旧版本曾完成账号、订单、到期释放和悬停动画的真实浏览器验证；最新入库、退货及范围筛选流程的 Edge 桌面／手机实操仍待补验。详细记录见 [执行记录](docs/progress.md) 与 [UI 验收](design-qa.md)。真实 MySQL 测试覆盖事务、并发库存、请求幂等、注册唯一性、会话/CSRF、状态竞争、重复操作、超时释放及失败回滚。测试通过只代表相应范围，不是生产认证。本轮附带有条件的本地并发测量，见 [盘点与交付验收](docs/operations-hardening-qa.md)。
 本机运行目录与凭据均忽略提交。GitHub Actions 已实际执行前端/Java/MySQL测试及 Docker Compose 构建、启动和接口检查；查看 [PR 检查](https://github.com/1028706210/StockFlow/pull/1/checks) 与 [首轮通过记录](https://github.com/1028706210/StockFlow/actions/runs/40332898399)。
 
 [Figma/Canva 设计来源](docs/UI-DESIGN.md) · [初始业务设计](docs/specs/2026-10-22-stockflow-design.md) · [本轮设计](docs/specs/2026-10-23-account-fulfillment-design.md) · [本轮实施计划](docs/plans/2026-10-23-account-fulfillment.md)
@@ -185,7 +189,7 @@ Docker Desktop 使用 Linux 容器时，运行 `./tools/Start-Container.ps1`；�
 
 聊天为规则与只读数据咨询，不代替确认/取消/发货操作。工作台内聊天无需启动 Node 进程；独立页面在 [Node聊天页](http://127.0.0.1:8787)，需要另启动 ../Node.js 项目。共享源码在 ../Node.js/web，规则在 ../Node.js/config/knowledge.json，通过其 tools/Install-StockFlowChat.ps1 同步后重新打包。
 
-本轮74项前端测试、真实Edge浏览器验收通过，静态资源已装入JAR；Java/MySQL测试本轮未运行。详见 [聊天验收](docs/chat-assistant-qa.md)。
+咨询助手独立接入阶段的记录为74项前端测试与真实Edge验收通过，当时未运行Java/MySQL测试；当前完整功能基线与测试口径见文档中心。详见 [聊天验收](docs/chat-assistant-qa.md)。
 
 ## 2026-10-27 完整业务与可靠性改进
 
@@ -195,4 +199,8 @@ Docker Desktop 使用 Linux 容器时，运行 `./tools/Start-Container.ps1`；�
 
 大数据测量仅在设置 `STOCKFLOW_LARGE_DATA_EVIDENCE=true` 时执行，会清理命名为 `stockflow_test` 的测试业务表；迁移破坏性夹具只允许 `stockflow_test_migration`。CI会运行两者并保存报告。配置与完整条件见 [本轮验收](docs/business-reliability-qa.md) 和 [测量样本](docs/evidence/2026-10-27-large-data.json)。
 
-浏览器控制目前被本机Work设置关闭，因此本轮没有声称桌面/手机真实页面验收通过；已完成HTTP/MySQL、前端状态及问答回归、静态模块加载与JAR运行验证。此前截图仅代表对应历史版本。
+2026-10-27至28日尝试验收时，工具返回本机Work设置关闭浏览器控制，最新单据的桌面／手机真实页面验收尚未完成。已有HTTP/MySQL、前端状态及问答回归、静态模块加载与JAR运行验证；此前截图仅代表对应历史版本。
+
+## 可维护性分阶段改进
+
+2026-10-29 第一阶段已拆出通用界面工具和库存流水／预警模块，保持原生 JavaScript、界面和业务接口。89项前端回归通过，JAR打包及匿名静态模块HTTP加载检查通过；本地没有重跑后端全套或完成新页面实操。见 [阶段计划](docs/plans/2026-10-29-maintainability-phases.md) 与 [第一阶段记录](docs/maintainability-stage1-qa.md)。以后新增文档、界面文案及说明统一使用简体中文。
