@@ -550,7 +550,7 @@ $('#product-edit-form').addEventListener('submit',event=>{
 async function openProductPicker(purpose,select=null){
   if(purpose==='receipt'&&($('#receipt-form').dataset.busy==='true'||state.receiptAttempt))return;
   if(purpose==='cart'&&state.orderAttempt)return;
-  state.picker={purpose,select,page:1,query:'',total:0,totalPages:1};$('#picker-search').value='';$('#picker-title').textContent=purpose==='receipt'?'选择入库商品':purpose==='stocktake'?'选择盘点商品':'选择订单商品';
+  state.picker={purpose,select,page:1,query:'',total:0,totalPages:1};$('#picker-search').value='';$('#picker-title').textContent=(purpose==='receipt'||purpose==='document')?'选择入库商品':purpose==='stocktake'?'选择盘点商品':'选择订单商品';
   if(!$('#picker-dialog').open)$('#picker-dialog').showModal();await loadPicker();
 }
 async function loadPicker(reset=false){

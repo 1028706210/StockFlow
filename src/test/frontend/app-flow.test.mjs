@@ -290,3 +290,12 @@ test('浏览器禁用存储时仍能登录并显示工作台',async()=>{
  Object.defineProperty(window,'sessionStorage',{get(){throw new Error('storage disabled');}});await ui.activateSession({id:3,username:'warehouse',roles:['ROLE_WAREHOUSE']});assert.equal(get('#workspace').hidden,false);assert.equal(ui.state.me.id,3);
 });
 test('对账默认只显示差异，显式 false 才显示全部',()=>{const {ui,get,location}=workbench();ui.state.me={roles:['ROLE_WAREHOUSE']};location.hash='#reconciliation';ui.showPage();assert.equal(get('#reconciliation-only').checked,true);location.hash='#reconciliation?mismatchOnly=false';ui.showPage();assert.equal(get('#reconciliation-only').checked,false);});
+
+test('商品选择器标题匹配正式入库、直接入库、盘点和订单场景',async()=>{
+  for(const [purpose,title] of [['document','选择入库商品'],['receipt','选择入库商品'],['stocktake','选择盘点商品'],['cart','选择订单商品']]){
+    const {get,ui}=workbench(async()=>({data:{items:[],page:1,total:0,totalPages:1}}));
+    await ui.openProductPicker(purpose,new Element());
+    assert.equal(get('#picker-title').textContent,title,purpose);
+    assert.equal(get('#picker-dialog').open,true);
+  }
+});
