@@ -48,3 +48,23 @@ body[data-surface="storefront"] .login-story .journey{display:none}
 @media(max-width:760px){body[data-surface="storefront"] .storefront-header{align-items:flex-start;flex-wrap:wrap;padding:20px 18px 14px;gap:18px}.storefront-header .brand{font-size:21px}.storefront-nav{width:100%;justify-content:space-between;gap:2px}.storefront-nav a{font-size:12px;padding:8px 6px}body[data-surface="storefront"] .topbar{padding:0 18px;height:52px}body[data-surface="storefront"] .breadcrumb{display:flex;font-size:10px;gap:8px}body[data-surface="storefront"] .account{max-width:70%}body[data-surface="storefront"] .account>div{display:none}body[data-surface="storefront"] #main-content{padding:27px 18px 0}body[data-surface="storefront"] .page-heading h1{font-size:28px}body[data-surface="storefront"] .heading-actions>.fine{display:none}body[data-surface="storefront"] .storefront-process{gap:0;grid-template-columns:1fr;margin-bottom:25px}.storefront-process li{padding:12px 16px;border-bottom:1px solid var(--line)}.storefront-process li:last-child{border-bottom:0}.storefront-process strong{margin:0 0 2px}.storefront-process small{font-size:10px}body[data-surface="storefront"] .order-layout{grid-template-columns:1fr}body[data-surface="storefront"] .storefront-catalog{gap:12px}.store-product{padding:18px}.store-product-top{margin-bottom:20px}.store-product-name{font-size:19px;margin-bottom:18px;min-height:57px}.store-price strong{font-size:24px}.store-product-actions{grid-template-columns:1fr;gap:8px}}
 @media(max-width:480px){body[data-surface="storefront"] .storefront-catalog{grid-template-columns:1fr}.store-product-name{min-height:0}.store-product-actions{grid-template-columns:1fr 1.25fr}.storefront-nav a{font-size:11px}.storefront-nav .storefront-draft{padding:8px 7px}#storefront-draft-count{margin-left:3px}.store-product-top{margin-bottom:18px}body[data-surface="storefront"] .page-heading{display:block}body[data-surface="storefront"] .heading-actions{justify-content:flex-start;margin-top:16px}}
 @media(prefers-reduced-motion:reduce){.store-product{transition:none}.store-product:hover{transform:none}}
+
+/* 买家手机列表保留关键列，时间信息在详情中完整展示。 */
+@media(max-width:760px){
+  body[data-surface="storefront"] #view-orders table,
+  body[data-surface="storefront"] #view-returns table{min-width:0;width:100%;table-layout:fixed;white-space:normal}
+  body[data-surface="storefront"] #view-orders :is(th,td),
+  body[data-surface="storefront"] #view-returns :is(th,td){padding:12px 8px;overflow-wrap:anywhere}
+  body[data-surface="storefront"] #view-orders :is(th,td):nth-child(4),
+  body[data-surface="storefront"] #view-returns :is(th,td):nth-child(4){display:none}
+  body[data-surface="storefront"] :is(#view-orders,#view-returns) .cell-actions{gap:4px}
+  body[data-surface="storefront"] :is(#view-orders,#view-returns) td button{min-height:44px;white-space:normal}
+  body[data-surface="storefront"] :is(#view-orders,#view-returns) .table-scroll{scrollbar-gutter:auto}
+  body[data-surface="storefront"] .pagination{gap:8px;flex-wrap:wrap}
+  body[data-surface="storefront"] .pagination>div{max-width:100%;gap:8px;flex-wrap:wrap}
+  body[data-surface="storefront"] .pagination button{flex-shrink:0;white-space:nowrap;min-height:40px}
+  body[data-surface="storefront"] .sf-chat-launcher{position:static;min-height:44px;margin:18px 18px 24px auto;padding:10px 16px;font-size:12px}
+  body[data-surface="storefront"] #order-detail-content table{table-layout:fixed;white-space:normal}
+  body[data-surface="storefront"] #order-detail-content :is(th,td){padding:12px 6px;overflow-wrap:anywhere}
+  body[data-surface="storefront"] #order-detail-content th:first-child{width:43%}
+}
