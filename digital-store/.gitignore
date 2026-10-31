@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+private/
+scripts/build-svg-goods.py
+scripts/build-template-goods.py
+scripts/record-canva-status.py
+artifacts/
+test-results.log
+node_modules/

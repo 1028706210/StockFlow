@@ -1,0 +1,8 @@
+{
+  "name": "xuwu-digital-store",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24.0.0 <25"},
+  "scripts": {"start": "node server/start.mjs", "test": "node --test tests/*.test.mjs", "build": "node scripts/verify-build.mjs"}
+}

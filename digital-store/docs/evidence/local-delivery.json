@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-30",
+  "type": "本地受控HTTP与签名回调演练",
+  "externalPaymentPlatformContacted": false,
+  "platformSandboxPassed": false,
+  "realFundsMoved": false,
+  "checks": [
+    "真实ZIP未付款拒绝403",
+    "伪造跳转参数不能标记付款",
+    "异步未到账不开放下载",
+    "重复签名通知幂等",
+    "已核验订单收到正确的两个真实商品ZIP，逐字节一致",
+    "服务重启后会话和订单授权保留",
+    "失败订单不交付"
+  ],
+  "downloads": [
+    {
+      "id": "c-icons",
+      "bytes": 293282,
+      "sha256": "f3ec1a19ef858b689e0f75bf9fc05b1d19b69230ef12cb6d7dd3ef03cbbf8b54"
+    },
+    {
+      "id": "d-decor",
+      "bytes": 780937,
+      "sha256": "59b3b6d1cd03e102a2b5e518865d85b17561faf01b6aa6ea8277a249b35bd262"
+    }
+  ],
+  "limitations": [
+    "外部支付API使用受控测试响应，不能替代Stripe沙箱交易",
+    "没有浏览器支付、移动布局或Canva跨账号复制验收",
+    "所有测试订单在独立临时目录，开发商城不生成假订单"
+  ]
+}

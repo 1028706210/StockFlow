@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-29",
+  "baseRevision": "255ed05b4804740fb55f28746a6f29bcabeb2cf2",
+  "scope": "入库单、退货单列表批量明细查询与同一 Service 可读性整理",
+  "measurement": "真实 MySQL + HTTP 请求，测试专用 MyBatis StatementHandler.prepare 计数；只统计四张单据表的 SELECT，不包含身份认证、事务控制和夹具 SQL",
+  "before": {
+    "receipt100Rows": 102,
+    "return100Rows": 102
+  },
+  "after": {
+    "receiptPageSizes": [
+      1,
+      8,
+      100
+    ],
+    "returnPageSizes": [
+      1,
+      8,
+      100
+    ],
+    "nonEmptyPageQueries": 3,
+    "emptyPageQueries": 2
+  },
+  "backend": {
+    "tests": 102,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 101,
+    "suites": 15
+  },
+  "frontend": {
+    "passed": 89,
+    "failed": 0,
+    "skipped": 0
+  },
+  "package": "BUILD SUCCESS",
+  "largeDataLocal": "本轮未开启；由 GitHub 工作流另行执行",
+  "browserAcceptance": "本阶段未执行真实 Edge 验收，保留到第三阶段",
+  "apiChange": false,
+  "schemaChange": false,
+  "runtimeDependencyAdded": false
+}

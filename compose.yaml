@@ -1,0 +1,31 @@
+name: stockflow
+services:
+  mysql:
+    image: mysql:8.0.43
+    environment:
+      MYSQL_DATABASE: stockflow_dev
+      MYSQL_USER: stockflow
+      MYSQL_PASSWORD: ${STOCKFLOW_DB_PASSWORD:?Set STOCKFLOW_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${STOCKFLOW_MYSQL_ROOT_PASSWORD:?Set STOCKFLOW_MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: [CMD, mysqladmin, ping, -h, 127.0.0.1, --silent]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  app:
+    build: .
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      STOCKFLOW_DB_URL: jdbc:mysql://mysql:3306/stockflow_dev?allowPublicKeyRetrieval=true&useSSL=false&connectionTimeZone=UTC
+      STOCKFLOW_DB_USERNAME: stockflow
+      STOCKFLOW_DB_PASSWORD: ${STOCKFLOW_DB_PASSWORD:?Set STOCKFLOW_DB_PASSWORD}
+      STOCKFLOW_DEMO_PASSWORD: ${STOCKFLOW_DEMO_PASSWORD:?Set STOCKFLOW_DEMO_PASSWORD}
+    ports:
+      - 127.0.0.1:${STOCKFLOW_HTTP_PORT:-8083}:8082
+    depends_on:
+      mysql:
+        condition: service_healthy
+volumes:
+  mysql-data:

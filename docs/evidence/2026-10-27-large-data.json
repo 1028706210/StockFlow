@@ -1,0 +1,98 @@
+{
+  "scope": "Synthetic query load; 10000 completed orders,1000 SKUs,30000 ledger rows,10000 audit rows; five warm HTTP samples including Basic authentication; not a production capacity claim",
+  "environment": "Windows 11; Java 17.0.7",
+  "samples": {
+    "orderDeepPage": {
+      "samplesMilliseconds": [
+        82.9201,
+        83.5058,
+        83.6739,
+        86.1879,
+        86.5804
+      ],
+      "maxMilliseconds": 86.5804,
+      "medianMilliseconds": 83.6739
+    },
+    "ledger": {
+      "samplesMilliseconds": [
+        91.3755,
+        92.39,
+        92.7671,
+        92.7965,
+        93.2043
+      ],
+      "maxMilliseconds": 93.2043,
+      "medianMilliseconds": 92.7671
+    },
+    "audit": {
+      "samplesMilliseconds": [
+        72.5855,
+        72.7746,
+        72.9467,
+        73.2336,
+        75.1382
+      ],
+      "maxMilliseconds": 75.1382,
+      "medianMilliseconds": 72.9467
+    },
+    "reconciliation": {
+      "samplesMilliseconds": [
+        159.9288,
+        160.0394,
+        161.1906,
+        161.4312,
+        163.728
+      ],
+      "maxMilliseconds": 163.728,
+      "medianMilliseconds": 161.1906
+    }
+  },
+  "ledgerPlan": [
+    {
+      "id": 1,
+      "select_type": "SIMPLE",
+      "table": "inventory_ledger",
+      "partitions": null,
+      "type": "ref",
+      "possible_keys": "uk_inventory_operation,sku_id",
+      "key": "sku_id",
+      "key_len": "8",
+      "ref": "const",
+      "rows": 30,
+      "filtered": 100,
+      "Extra": "Backward index scan; Using index"
+    }
+  ],
+  "auditPlan": [
+    {
+      "id": 1,
+      "select_type": "SIMPLE",
+      "table": "operation_audit",
+      "partitions": null,
+      "type": "ref",
+      "possible_keys": "ix_audit_action_id",
+      "key": "ix_audit_action_id",
+      "key_len": "130",
+      "ref": "const",
+      "rows": 4893,
+      "filtered": 100,
+      "Extra": "Backward index scan; Using index"
+    }
+  ],
+  "orderPlan": [
+    {
+      "id": 1,
+      "select_type": "SIMPLE",
+      "table": "customer_order",
+      "partitions": null,
+      "type": "ref",
+      "possible_keys": "uk_buyer_request,ix_expiration",
+      "key": "uk_buyer_request",
+      "key_len": "8",
+      "ref": "const",
+      "rows": 4999,
+      "filtered": 5,
+      "Extra": "Using where; Using filesort"
+    }
+  ]
+}

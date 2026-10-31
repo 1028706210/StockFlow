@@ -1,0 +1,86 @@
+[
+  {
+    "route": "/",
+    "heading": "好想法，值得好设计。",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/products",
+    "heading": "找到你的下一份灵感。",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/product/b-promo",
+    "heading": "栖日 · 促销海报模板",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/cart",
+    "heading": "把喜欢的设计，放在一起。",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/order",
+    "heading": "查看每一步真实状态。",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/delivery",
+    "heading": "你的素材，在这里。",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/faq",
+    "heading": "先了解，再开始。",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/contact",
+    "heading": "把问题说清楚，让素材用得顺手。",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/license",
+    "heading": "素材授权草案",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/privacy",
+    "heading": "隐私说明草案",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/terms",
+    "heading": "服务条款草案",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  },
+  {
+    "route": "/refund",
+    "heading": "数字商品退款说明草案",
+    "mainVisible": true,
+    "scrollWidth": 320,
+    "width": 320
+  }
+]

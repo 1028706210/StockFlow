@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-30",
+  "sourceCommit": "fd248665da669b9c54237100f92e53e39419d085",
+  "browser": {
+    "mobile": "390x844收货、退货申请与取消重建",
+    "cancelledReturn": "RT-1 CANCELLED",
+    "receipt": "RC-2 CONFIRMED",
+    "confirmedReturn": "RT-2 CONFIRMED",
+    "csv": "真实Edge点击，Downloads文件存在并核对2行；事件等待工具超时",
+    "order": "SF-11 COMPLETED"
+  },
+  "api": {
+    "receiptConfirmAudit": 1,
+    "stocks": [
+      {
+        "skuId": 15,
+        "code": "EDGE-20261030-B",
+        "name": "Edge验收本20261030",
+        "onHand": 6,
+        "reserved": 0,
+        "orderReserved": 0,
+        "ledgerOnHand": 6,
+        "ledgerReserved": 0,
+        "consistent": true
+      },
+      {
+        "skuId": 14,
+        "code": "EDGE-20261030-A",
+        "name": "Edge验收杯20261030",
+        "onHand": 10,
+        "reserved": 0,
+        "orderReserved": 0,
+        "ledgerOnHand": 10,
+        "ledgerReserved": 0,
+        "consistent": true
+      }
+    ],
+    "receiptLedgerRows": 2,
+    "buyer2ReturnStatus": 404,
+    "buyer2OrderStatus": 404,
+    "returnConfirmAudit": 1,
+    "reconciliationMismatch": 0,
+    "returnLedgerRows": 2
+  },
+  "pending": [
+    "Edge流水／审计页面及关联导航",
+    "日期金额筛选和订单CSV",
+    "真实换号隔离页面",
+    "手机完整入库／下单／发货链路",
+    "重复确认的实际浏览器重试"
+  ],
+  "blocker": "后续浏览器点击返回 Local browser use is disabled in Work settings；接口检查不代替页面验收"
+}

@@ -1,0 +1,3 @@
+-- Database schema is managed only by Flyway.
+-- Canonical scripts: db/migration/B004__legacy_schema.sql, V005__order_item_snapshots.sql, V006__business_documents.sql.
+-- Do not replay legacy scripts against an upgraded database.

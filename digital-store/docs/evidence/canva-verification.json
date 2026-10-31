@@ -1,0 +1,48 @@
+[
+  {
+    "productId": "a-social",
+    "designId": "DAHZfeRTo9U",
+    "pageCount": 6,
+    "dimensionsPx": [
+      1080,
+      1080
+    ],
+    "editableTextObjects": 67,
+    "importVerified": true,
+    "textOperationVerified": true,
+    "geometryEditingVerified": false,
+    "gridVisualVerified": true,
+    "templateLinkPanelVerified": true,
+    "accountTemplateLinkLimitation": "社交模板的模板链接面板仅显示免费试用30天；未开启试用，未取得复制链接",
+    "templateCopyLink": null,
+    "templateCopyVerified": false,
+    "freeAccountExportVerified": false,
+    "fullPageRenderVerified": false,
+    "managementLinkIsNotBuyerLink": true,
+    "date": "2026-10-30",
+    "geometrySelectionSampleVerifiedInPreviousDraft": true
+  },
+  {
+    "productId": "b-promo",
+    "designId": "DAHZfA5rGDI",
+    "pageCount": 4,
+    "dimensionsPx": [
+      1080,
+      1350
+    ],
+    "editableTextObjects": 54,
+    "importVerified": true,
+    "textOperationVerified": true,
+    "geometryEditingVerified": false,
+    "gridVisualVerified": true,
+    "templateLinkPanelVerified": false,
+    "accountTemplateLinkLimitation": "社交模板的模板链接面板仅显示免费试用30天；未开启试用，未取得复制链接",
+    "templateCopyLink": null,
+    "templateCopyVerified": false,
+    "freeAccountExportVerified": false,
+    "fullPageRenderVerified": false,
+    "managementLinkIsNotBuyerLink": true,
+    "date": "2026-10-30",
+    "geometrySelectionSampleVerifiedInPreviousDraft": false
+  }
+]

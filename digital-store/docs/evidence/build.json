@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-30",
+  "result": "PASS",
+  "products": [
+    {
+      "id": "a-social",
+      "count": 6,
+      "zipBytes": 1161713,
+      "zipSha256": "82d7f97417643ffb692f652087158a0577c051f357a273169a9c0207bbe572cb",
+      "saleStatus": "blocked",
+      "priceConfirmed": false
+    },
+    {
+      "id": "b-promo",
+      "count": 4,
+      "zipBytes": 1009746,
+      "zipSha256": "f050499f1d473532473415c1cf054f25046cc1890ae08164a456f6bfbdc25b04",
+      "saleStatus": "blocked",
+      "priceConfirmed": false
+    },
+    {
+      "id": "c-icons",
+      "count": 12,
+      "zipBytes": 293282,
+      "zipSha256": "f3ec1a19ef858b689e0f75bf9fc05b1d19b69230ef12cb6d7dd3ef03cbbf8b54",
+      "saleStatus": "ready",
+      "priceConfirmed": false
+    },
+    {
+      "id": "d-decor",
+      "count": 12,
+      "zipBytes": 780937,
+      "zipSha256": "59b3b6d1cd03e102a2b5e518865d85b17561faf01b6aa6ea8277a249b35bd262",
+      "saleStatus": "ready",
+      "priceConfirmed": false
+    }
+  ],
+  "publicPaidFiles": 0,
+  "checks": [
+    "4个商品与实际清单数量一致",
+    "16张公开预览存在且非空",
+    "真实商品ZIP存在",
+    "收费源文件不在public中",
+    "简体中文HTML与未开通标识"
+  ],
+  "notCovered": [
+    "真实浏览器渲染、手机溢出、键盘完整流程",
+    "Canva所有图形编辑、免费账户导出与复制链接",
+    "支付平台沙箱和生产交易"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-30",
+  "tests": 28,
+  "pass": 28,
+  "fail": 0,
+  "skip": 0,
+  "scope": {
+    "backendHttpSqliteAndPayment": 19,
+    "frontendStateAndModel": 9
+  },
+  "notBrowserAcceptance": true,
+  "notPlatformSandbox": true
+}

@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-30",
+  "base": "http://127.0.0.1:8094",
+  "result": "PASS",
+  "pageStatus": 200,
+  "productCount": 4,
+  "imageResponses": 16,
+  "publicCodeResponses": 4,
+  "privatePaths": "404",
+  "unpaidDownload": "403",
+  "disabledCheckout": "503",
+  "fakeOrdersCreated": 0,
+  "visualBrowserAcceptance": false
+}

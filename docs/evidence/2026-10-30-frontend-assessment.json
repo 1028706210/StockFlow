@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-30",
+  "baseline": "aa1ff2ec914d32a5b057fab21e0991ed4a7df116",
+  "views": 13,
+  "files": [
+    {
+      "path": "src/main/resources/static/app.js",
+      "bytes": 69528,
+      "lines": 720,
+      "sha256": "9a5f9cdc5aebc66f7758a9093fb2862d75fdf43c6ad2d5c267979a211747f4d2"
+    },
+    {
+      "path": "src/main/resources/static/index.html",
+      "bytes": 41474,
+      "lines": 114,
+      "sha256": "0478a27c1360fafcd938e0c47ef38d2e1ff4d11bdf8a39277888a007fb237197"
+    },
+    {
+      "path": "src/main/resources/static/styles.css",
+      "bytes": 39658,
+      "lines": 1952,
+      "sha256": "d3297eb291a6b448334403b5a7bb1e0340724ecd638f304d240232ca44be0e7f"
+    },
+    {
+      "path": "src/main/resources/static/api-client.mjs",
+      "bytes": 3221,
+      "lines": 29,
+      "sha256": "0b2f2677cff8c49f8969c1b611e9e694c53be423c29b493615dea3c9d77ab3aa"
+    },
+    {
+      "path": "src/main/resources/static/query-state.mjs",
+      "bytes": 1998,
+      "lines": 20,
+      "sha256": "738ebbade268bed7790d8533ffb07f61d2cd0e07f489b4b11836ebbf9e0ba6d0"
+    },
+    {
+      "path": "src/main/resources/static/ui-model.mjs",
+      "bytes": 3435,
+      "lines": 64,
+      "sha256": "e111902296c8984c91dba50c8161d989c2eca95ae710ed889d29824a674a0b37"
+    },
+    {
+      "path": "src/main/resources/static/business-documents.mjs",
+      "bytes": 13135,
+      "lines": 53,
+      "sha256": "9fd5a5e09a67e15f1fbf24441d6edb7aa76505b300f788b3868619df09e45ab5"
+    },
+    {
+      "path": "src/main/resources/static/assets/ui/inventory-reports.mjs",
+      "bytes": 5781,
+      "lines": 67,
+      "sha256": "ab371948afb4449c80267ed0185d8316cf1b68206c6dcb7e550c32945a8d7a3c"
+    }
+  ],
+  "decision": "保留原生ES Modules；Vue只读试点待需求与批准",
+  "frameworkMigrationImplemented": false
+}

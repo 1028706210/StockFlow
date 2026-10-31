@@ -1,0 +1,545 @@
+{
+  "documentVersion": "1.1",
+  "date": "2026-10-29",
+  "sourceRevision": "33c830f51f7bb2a57b5442ea323a103dfb300122",
+  "files": [
+    {
+      "path": ".github/workflows/verify.yml",
+      "sha256": "97720b6a3659f3482a9f068c17c4fa1a01c57a9472828ac92c031c72fad1f34f"
+    },
+    {
+      "path": "compose.yaml",
+      "sha256": "aae70ae89af223d934ddecacc2d7b0505416ae5e530847c8de53094e4e1ac458"
+    },
+    {
+      "path": "pom.xml",
+      "sha256": "2601de9c2a2c61cc00511f7df4d2c7c1c4c6ddddeb62072f2d0e4d639a8e7ea1"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/api/ApiErrors.java",
+      "sha256": "bf15bdb8dcc47fe7479aea4b5b29471a61c3d7123f3874a42cc914039ab41fc7"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/api/ApiException.java",
+      "sha256": "769ed08fc6084b457b3fee34cc20be89c70554788e2ceb837e4e8782589f3488"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/api/RequestIdFilter.java",
+      "sha256": "bd85eff33848a5c8902df6ec8a465e262790f32284fe3242bf48c86b45e68fee"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/auth/AccountMapper.java",
+      "sha256": "8ec54ae1d1affffc0a8131e78913dce7be29d625c41b6ed591966e72bd6cd0ce"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/auth/AccountPrincipal.java",
+      "sha256": "48dd9ea0216f2a0176c64042ec7b711c6cd1ff3e6fe29742b7880a94d632dd62"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/auth/AccountService.java",
+      "sha256": "d4f5c63a0001145ea19df0c85f41869b9aebe328103e6f06b24fb58eed4d6e2e"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/auth/Actor.java",
+      "sha256": "96e72135a843e10744631d839a6c189bf91b3dd4861aee2f1e7ee2b044219ac2"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/auth/AuthController.java",
+      "sha256": "e41a2dda9867920b94323e252b79c3b6647c34d2a64132cb90aea302ec6622c0"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/auth/SecurityConfiguration.java",
+      "sha256": "cf52a02b595926305af4bb34944a8e8f4420451edc5f72090a972b6af55d26a5"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/catalog/CatalogController.java",
+      "sha256": "5d719b47a0c962094256624e0f3ecdc9e3a5b522fcf6ef8bb368ef63938b4523"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/catalog/CatalogMapper.java",
+      "sha256": "ffb4b60601f2d334d39d1d968093db03b82ec19eebae2c611a67cec1bd289aa6"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/catalog/CatalogModels.java",
+      "sha256": "774c7c2f444f3b8d86576c7c7756cfae45e7f3c285375f488b3918b3d051127f"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/catalog/CatalogService.java",
+      "sha256": "2a91f5c65ee840720392f8fa5b8806ce2fb047b770cc9ad644f46864f5ba3e26"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/documents/DocumentController.java",
+      "sha256": "9f629e1996ed26cfbaa0aed6a50fbbff8d4f713a96331fd88885165d7d258fdb"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/documents/DocumentMapper.java",
+      "sha256": "f9f6411e1f50764b7a034a09d1c00f8190fb44a9adb4f84912b830fb14f1f78a"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/documents/DocumentModels.java",
+      "sha256": "9452b38b8344ba8c9e26de51a0f2bcf25594fdc6d6a34557cc104b45574c1d95"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/documents/DocumentService.java",
+      "sha256": "9a92ba2dd511ed18059339061c0534c0dd9c72a35469759f30213bb68b2d5939"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/fulfillment/FulfillmentController.java",
+      "sha256": "febd63dade9abbf55559d526387a4b9f9e85fbe13b83afaec8ef4135cef2b664"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/fulfillment/OrderExpiration.java",
+      "sha256": "186ed6a25cd534c7978a90c027efa27b1b6dcc6b549a34ac1064c817326eb357"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/inventory/InventoryController.java",
+      "sha256": "14f9d4e99bd834960d4b1c2eadc498cf7a496f23d5215a9ed5eb8ec7a5fd60ae"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/inventory/InventoryMapper.java",
+      "sha256": "c05c70909693334706037d0b5797c7d8f9d79a9d2f282656eabeb32e54fd2344"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/inventory/InventoryModels.java",
+      "sha256": "1e26e9a02bff8c47253d3a28a5c92444af3b81135236e48fc6038d75a18e2ae5"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/inventory/InventoryService.java",
+      "sha256": "4a5eb19d8161f5138e085efb93aea0af95b8da12f77f0664d412abaa49062678"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/operations/AuditService.java",
+      "sha256": "1e62d90bc0996cbf306e07af9154b7597514efb1bb43133b698abecbced295fb"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/operations/OperationsController.java",
+      "sha256": "21ac13387c438d7b47605e7383555dce8cc1ada519be56e15306bcdd2dbacdad"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/operations/OperationsMapper.java",
+      "sha256": "5bca07671c76378760c2178a52099a40da9dd801b278cc93f57d39140cc45bc1"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/operations/OperationsModels.java",
+      "sha256": "68a016e8753b856f870d9cb94aa93d8f1e34062048b6a73ccfc04f80bf9ffdad"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/operations/StocktakeService.java",
+      "sha256": "7ae8a44cf411d5be5e72b70952c5f602b636bda6e2f7ca89ef605d90e695e502"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/order/OrderController.java",
+      "sha256": "d28119fd88983ec54fe223ee7c89c88a4ef3467b70b9aa905af5d3d00582209d"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/order/OrderLines.java",
+      "sha256": "d19f9684e92ad2be6071994c50922fd164f27e080238bc22b373033620e197a9"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/order/OrderMapper.java",
+      "sha256": "607c008dd3bf282a3cd57ea83302b4b7f57c4cdadc55724899859e590e073382"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/order/OrderModels.java",
+      "sha256": "01378ba4ed0658a5872387409704470f295c78d12bd0a18e2756425427c5c1bb"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/order/OrderService.java",
+      "sha256": "8f7bc306f36e12598ec7b606a87d05bcca84b0e1621ce316976fcd312ae30643"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/runtime/DatabaseReadiness.java",
+      "sha256": "657b4abc786d56794cdcdfb416e00d09b96bebfcbafa0bab391b588bcad9f4f9"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/runtime/RuntimeController.java",
+      "sha256": "8d2909afd20d0bc4172c024a5b414555acd493edcfb468bf9a55125fb6a68d52"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/runtime/RuntimeMetrics.java",
+      "sha256": "ef8de5c00ea6c0de983483729fed82570753ca32cf021973e56e5516b2f20e9e"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/runtime/RuntimeMetricsFilter.java",
+      "sha256": "f1f34fcab171100917fd922fd904edcade02b46ebf42c4d4535860d510368330"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/runtime/StockFlowMigrations.java",
+      "sha256": "9d3c731880da1206e18777962a69c48cdc5c4c8cbc43ab47290719a9c105b188"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/StockFlowApplication.java",
+      "sha256": "0726a77e6c8198d90b219ccd9da724e10e692d5b14a1ecf75109c01020cfd98b"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/workbench/FilteredExportController.java",
+      "sha256": "0527e2eeea4abbf6325e98c36e51fc213260910136d3bbff1baa99a4466b8a7c"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/workbench/QueryRange.java",
+      "sha256": "d1d774b57a97eaab73f0adc5df97dc008c16a8dc61f0f4d15619d3060fa35b4b"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/workbench/WorkbenchController.java",
+      "sha256": "45da2873285e9bb1b2a07a6a654f4b77c6a02237a66af5cf6f9a677b4e63c4dd"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/workbench/WorkbenchMapper.java",
+      "sha256": "9f76f45ed916890cdc64077b1a927c9220e2fd0f9d363c62c9e2226a19abb4f9"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/workbench/WorkbenchModels.java",
+      "sha256": "e734e7685628283a5879099ba4d0a382b875ddae21cce7eb8e96f6310a31d3d6"
+    },
+    {
+      "path": "src/main/java/io/github/stockflow/workbench/WorkbenchService.java",
+      "sha256": "c37a659ee1cf92bf7654c9e218bfcb37b140a721e250708d344458ad7d538146"
+    },
+    {
+      "path": "src/main/resources/application.properties",
+      "sha256": "bebafb1fbeb0cf3c1ca1cf092445c5094122b89815a0463a063fa7d56139e75e"
+    },
+    {
+      "path": "src/main/resources/db/migration/B004__legacy_schema.sql",
+      "sha256": "a5026a00b6e2213137f5140055078ee1b514a393dbe4feafcb03813777591df4"
+    },
+    {
+      "path": "src/main/resources/db/migration/V005__order_item_snapshots.sql",
+      "sha256": "63f69403232b4b9a9497c58a7ed9f537c9d6c7d4c249566cd2856ebed1aee9cc"
+    },
+    {
+      "path": "src/main/resources/db/migration/V006__business_documents.sql",
+      "sha256": "67facfdcf1b1eee9ea80fee574904d298e5447c1cc4d719b4740d0b3a098657b"
+    },
+    {
+      "path": "src/main/resources/static/api-client.mjs",
+      "sha256": "0b2f2677cff8c49f8969c1b611e9e694c53be423c29b493615dea3c9d77ab3aa"
+    },
+    {
+      "path": "src/main/resources/static/app.js",
+      "sha256": "f0f28b2476112827069cc85074010c10d1fbe5f2d64765a5532e5e9fb58b648c"
+    },
+    {
+      "path": "src/main/resources/static/assets/ui/chat/knowledge.json",
+      "sha256": "d3f0d57fed18925d4bc5784bfd36a73430b14403953121490cacf83b607c16b2"
+    },
+    {
+      "path": "src/main/resources/static/assets/ui/inventory-reports.mjs",
+      "sha256": "ab371948afb4449c80267ed0185d8316cf1b68206c6dcb7e550c32945a8d7a3c"
+    },
+    {
+      "path": "src/main/resources/static/assets/ui/ui-helpers.mjs",
+      "sha256": "d2c9009fb3d4f50d166d1f5e6ff4ac66da49d0e27c0eaecf4f2b59216ef72311"
+    },
+    {
+      "path": "src/main/resources/static/business-documents.mjs",
+      "sha256": "9fd5a5e09a67e15f1fbf24441d6edb7aa76505b300f788b3868619df09e45ab5"
+    },
+    {
+      "path": "src/main/resources/static/document-state.mjs",
+      "sha256": "856575e487a967b9f3896634d6cec8e858c737680a7634969b3bde34e9995ff1"
+    },
+    {
+      "path": "src/main/resources/static/index.html",
+      "sha256": "0478a27c1360fafcd938e0c47ef38d2e1ff4d11bdf8a39277888a007fb237197"
+    },
+    {
+      "path": "src/main/resources/static/query-state.mjs",
+      "sha256": "738ebbade268bed7790d8533ffb07f61d2cd0e07f489b4b11836ebbf9e0ba6d0"
+    },
+    {
+      "path": "src/main/resources/static/ui-model.mjs",
+      "sha256": "e111902296c8984c91dba50c8161d989c2eca95ae710ed889d29824a674a0b37"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/AuthenticationIntegrationTest.java",
+      "sha256": "035a8642cc06abd3dfd29cab762f4be4db803c26a9b08a8bc49ee46c3fedf2aa"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/BusinessProgressIntegrationTest.java",
+      "sha256": "924171eca081fd436cb9b0fb8c9031285c32f7b7114d0e1a81e106d15afac10c"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/DocumentIntegrationTest.java",
+      "sha256": "7152987a0f0cda513576bdb8121aa866e67e89a9d2371d7319645cbb11c1533a"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/FulfillmentIntegrationTest.java",
+      "sha256": "b415a271dd4bfb92d7471094b9fd6db3d800fdb0305e5d42a1faf69dcf9c2add"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/InventoryVisibilityIntegrationTest.java",
+      "sha256": "d0423e7c1edb593dc3d53be0b16dd6dbc39b7c57b04248f75f778276de55b278"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/LargeDataEvidenceTest.java",
+      "sha256": "4c060e65900a364a72e2c55429200067d14ed47266c7edf67c465c836c5d2f6d"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/MigrationIntegrationTest.java",
+      "sha256": "25705851810784f6944e91301e0a211ef4752078535cfdaf70206719d0773a99"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/OperationsIntegrationTest.java",
+      "sha256": "3437616c50cd4b24f82cfd85c244ccdf5067dd8b166e82ea2136d57b0910d1cb"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/order/OrderLinesTest.java",
+      "sha256": "82baf4f1673ba86a782148e30c9704578b6e47b94e15f2ea9522fe4b578be2b6"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/RevisionIntegrationTest.java",
+      "sha256": "2ccabca8de57033fb61d96a2782be6a786a435ae8a371c883c746af3f5ce46c1"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/RuntimeHealthIntegrationTest.java",
+      "sha256": "ab25fc7cc0bd59340e63f7bcb92cae23c6a89190c5b8a82b2869db78aafef78e"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/RuntimeProbeTest.java",
+      "sha256": "1f0935204e98feff4f2e51091bba8cdb12ec67a7f0e4f0b4bbdb1c7d0140e933"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/StockFlowIntegrationTest.java",
+      "sha256": "7203e4ba33e36e680b312b8224ddff652a6bc00633dd00be33b77cad3b4a176a"
+    },
+    {
+      "path": "src/test/java/io/github/stockflow/WorkbenchIntegrationTest.java",
+      "sha256": "0d6b0b00622b3d7d50512343b1a2d794a06c3637896c6285e8186ad14568ebab"
+    },
+    {
+      "path": "tools/Invoke-Local.ps1",
+      "sha256": "4f47774cf7983dbb9917a7a31b2ff85fd3a9277b7af482efa68559f3d68f139b"
+    },
+    {
+      "path": "tools/Start-Container.ps1",
+      "sha256": "0b6f305e614a35fa726369aef063c8c044a5c56e9c45f116e799fc46c36f6dfb"
+    },
+    {
+      "path": "tools/Start-LocalDatabase.ps1",
+      "sha256": "a0c3c8d453b5aca0addadf6d8e6d2ac57957b54cf3d7d97194c2af03462bdab6"
+    },
+    {
+      "path": "tools/Start-StockFlow.ps1",
+      "sha256": "1fd7766be396aa3c361ffed21be3aa074824a3170f21c3e4bf96d8b862689764"
+    },
+    {
+      "path": "tools/Update-LocalDatabase.ps1",
+      "sha256": "5f8d7fd8513517ff2a5c28178d3560029d928a7ca9e6eefe8c775f554d19de13"
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/health"
+    },
+    {
+      "method": "GET",
+      "path": "/api/health/readiness"
+    },
+    {
+      "method": "GET",
+      "path": "/api/runtime/metrics"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/csrf"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/register"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login"
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/me"
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/logout"
+    },
+    {
+      "method": "GET",
+      "path": "/api/skus"
+    },
+    {
+      "method": "GET",
+      "path": "/api/skus/page"
+    },
+    {
+      "method": "GET",
+      "path": "/api/skus/{id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/skus"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/skus/{id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/inventory"
+    },
+    {
+      "method": "GET",
+      "path": "/api/inventory/page"
+    },
+    {
+      "method": "GET",
+      "path": "/api/inventory/{skuId}"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/inventory/{skuId}/policy"
+    },
+    {
+      "method": "POST",
+      "path": "/api/inventory/{skuId}/receipts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/inventory/ledger"
+    },
+    {
+      "method": "GET",
+      "path": "/api/inventory/alerts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/inventory/export"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders/page"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders/export"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/orders/{id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders/{id}/confirm"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders/{id}/cancel"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders/{id}/complete"
+    },
+    {
+      "method": "GET",
+      "path": "/api/fulfillment/orders"
+    },
+    {
+      "method": "GET",
+      "path": "/api/fulfillment/orders/page"
+    },
+    {
+      "method": "GET",
+      "path": "/api/fulfillment/orders/export"
+    },
+    {
+      "method": "GET",
+      "path": "/api/fulfillment/orders/{id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/fulfillment/orders/{id}/ship"
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard"
+    },
+    {
+      "method": "GET",
+      "path": "/api/dashboard/trends"
+    },
+    {
+      "method": "GET",
+      "path": "/api/audit"
+    },
+    {
+      "method": "GET",
+      "path": "/api/inventory/reconciliation"
+    },
+    {
+      "method": "GET",
+      "path": "/api/stocktakes"
+    },
+    {
+      "method": "POST",
+      "path": "/api/stocktakes"
+    },
+    {
+      "method": "GET",
+      "path": "/api/stocktakes/{id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/stocktakes/{id}/confirm"
+    },
+    {
+      "method": "POST",
+      "path": "/api/stocktakes/{id}/cancel"
+    },
+    {
+      "method": "GET",
+      "path": "/api/receipts"
+    },
+    {
+      "method": "POST",
+      "path": "/api/receipts"
+    },
+    {
+      "method": "GET",
+      "path": "/api/receipts/{id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/receipts/{id}/confirm"
+    },
+    {
+      "method": "POST",
+      "path": "/api/receipts/{id}/cancel"
+    },
+    {
+      "method": "GET",
+      "path": "/api/returns"
+    },
+    {
+      "method": "POST",
+      "path": "/api/returns"
+    },
+    {
+      "method": "GET",
+      "path": "/api/returns/{id}"
+    },
+    {
+      "method": "POST",
+      "path": "/api/returns/{id}/confirm"
+    },
+    {
+      "method": "POST",
+      "path": "/api/returns/{id}/cancel"
+    }
+  ]
+}
