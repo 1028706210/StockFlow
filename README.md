@@ -93,6 +93,8 @@ node --test src/test/frontend/*.test.mjs digital-store/tests/*.test.mjs
 
 ## 目录导读
 
+新增[实物订购前台](docs/storefront-alignment.md)：Java启动后访问 `/shop`，买家与仓管共用同一套商品和订单。可另运行 `node ./storefront/start.mjs`，使8094跳转到Java前台；Docker后台8083时先设置 `STOCKFLOW_BACKEND_URL=http://127.0.0.1:8083`。原数字素材商城仍在digital-store，独立运行时请使用8095等其他端口。
+
 ```text
 src/main/java/io/github/stockflow/  按业务领域划分的后端模块
 src/main/resources/static/        原生前端、查询状态与业务交互

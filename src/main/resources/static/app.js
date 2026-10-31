@@ -1,6 +1,7 @@
 import {createProductPicker} from '/assets/ui/product-picker.mjs';
 import {createUiHelpers} from '/assets/ui/ui-helpers.mjs';
 import {createInventoryReports,newInventoryReports} from '/assets/ui/inventory-reports.mjs';
+import {createStorefrontUI} from '/assets/ui/storefront.mjs';
 import {parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline} from '/ui-model.mjs';
 
 import {requestJson} from '/api-client.mjs';
@@ -9,6 +10,7 @@ import {createDocumentUI} from '/business-documents.mjs';
 
 const ui = createUiHelpers(document, Node);
 const {$,all,money,time,node,button,message,failure,badge,cell,productCell,empty} = ui;
+const storefrontUI=createStorefrontUI({document,location,node,button,money});
 const pages = {
   receipts:['入库单','GOODS RECEIPTS','建立入库草稿，核对实物后确认入库。'],
   returns:['退货单','ORDER RETURNS','整单退货申请与实物接收记录，不涉及退款。'],
@@ -57,13 +59,16 @@ function clearSession(note=''){
   all('dialog[open]').forEach(dialog=>dialog.close());closeMenu();$('#workspace').hidden=true;$('#login-screen').hidden=false;$('#toast').hidden=true;
   $('#login-password').value='';$('#register-password').value='';$('#register-confirm').value='';$('#cart-lines').replaceChildren();setAuthForm(false);message('#login-error',note);$('#login-password').focus();
   publishChatSession();
+  storefrontUI.clear();
 }
 function setAuthForm(register){
   $('#login-form').hidden=register;$('#register-form').hidden=!register;$('#show-register').hidden=register;$('#show-login').hidden=!register;
   $('#auth-title').textContent=register?'注册买家账号':'进入工作台';$('#auth-description').textContent=register?'建立自己的账号，开始管理你的订单。':'登录账号，开始处理业务。';
   message('#login-error');message('#register-error');
+  storefrontUI.auth(register);
 }
 async function activateSession(me){
+  if(!storefrontUI.accept(me))return;
   const identity=String(me.id);let previous=lastIdentity;try{previous=previous||window.sessionStorage?.getItem('stockflow-query-identity');}catch{}
   if(previous&&previous!==identity){const hash='#'+currentPage();if(window.history?.replaceState)window.history.replaceState(null,'',hash);else location.hash=hash;}
   lastIdentity=identity;try{window.sessionStorage?.setItem('stockflow-query-identity',identity);}catch{}
@@ -145,6 +150,7 @@ function showPage(){
   else if((page==='orders'||page==='overview')&&buyer()){action.textContent='创建订单';action.onclick=()=>navigate('new-order');}
   else if(page==='overview'&&warehouse()){action.textContent='新增商品';action.onclick=openSku;}
   else action.hidden=true;
+  storefrontUI.page(page);
   closeMenu();
   if(['receipts','returns'].includes(page))documents.show(page,query);
   else if(state.operations[page])loadOperations(page);
@@ -210,6 +216,11 @@ function renderOverview(){
     ['实存总量',summary.onHand,'ON HAND','全库实存数量',''],
     ['已预留量',summary.reserved,'RESERVED','全库订单占用数量','accent'],
     ['低库存商品',summary.lowStockCount,'ATTENTION','在售商品，可用量低于各自安全线','warning']
+  ]:storefrontUI.enabled?[
+    ['待我确认',summary.pendingCount,'TO CONFIRM','提交后需在期限内确认','accent'],
+    ['待仓库发货',summary.confirmedCount,'TO SHIP','已确认，等待仓管履约',''],
+    ['待我收货',summary.shippedCount,'TO RECEIVE','实际收到商品后确认收货','accent'],
+    ['我的订单',summary.orderCount,'MY ORDERS','只统计当前买家本人订单','']
   ]:[
     ['在售商品',summary.productCount,'CATALOG','全部在售商品',''],
     ['我的订单',summary.orderCount,'MY ORDERS','全部本人订单',''],
@@ -278,6 +289,7 @@ function renderTable(kind){
   const size=node('select');size.setAttribute('aria-label',(kind==='products'&&buyer()?'浏览商品':pages[kind][0])+'每页条数');for(const value of [8,20,50])size.append(new Option('每页 '+value+' 条',String(value)));size.value=String(list.size);size.disabled=list.loading;size.addEventListener('change',()=>{list.size=Number(size.value);loadMainList(kind,true);});controls.append(size,button('重置筛选',()=>resetList(kind)));
   $('#'+kind+'-pagination').replaceChildren(node('span','共 '+list.total+' 条 · 每页 '+list.size+' 条'),controls);
   if(kind!=='inventory')$('#'+kind+'-loaded').textContent='共 '+list.total+' 条 · 全量查询';
+  if(kind==='products')storefrontUI.catalog(list,{detail:openProduct,pick:pickProduct});
 }
 function productOptions(select,selected='',onlyActive=false){
   select.replaceChildren(new Option('请选择商品',''));
@@ -345,9 +357,10 @@ function updateCart(){
   let valid=false;
   try{
     const preview=cartPreview(cartRows(),state.products);
+    storefrontUI.draft(preview.items.length);
     $('#cart-kind-count').textContent=preview.items.length+' 种';$('#cart-total').textContent=money(preview.totalCents/100);
     if(!state.orderAttempt)message('#cart-error');valid=true;
-  }catch(error){$('#cart-kind-count').textContent='—';$('#cart-total').textContent='—';if(!state.orderAttempt)message('#cart-error',failure(error));}
+  }catch(error){storefrontUI.draft(null);$('#cart-kind-count').textContent='—';$('#cart-total').textContent='—';if(!state.orderAttempt)message('#cart-error',failure(error));}
   $('#submit-order').disabled=(!valid&&!state.orderAttempt)||$('#order-form').dataset.busy==='true'||!state.loaded;
   $('#add-cart-line').disabled=all('.cart-line').length>=10;
 }

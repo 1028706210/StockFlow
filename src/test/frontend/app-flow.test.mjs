@@ -1,6 +1,7 @@
 import {createProductPicker} from '../../main/resources/static/assets/ui/product-picker.mjs';
 import {createUiHelpers} from '../../main/resources/static/assets/ui/ui-helpers.mjs';
 import {createInventoryReports,newInventoryReports} from '../../main/resources/static/assets/ui/inventory-reports.mjs';
+import {createStorefrontUI} from '../../main/resources/static/assets/ui/storefront.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -22,12 +23,24 @@ class Element {
   cloneNode(){return new Element('cart-row');}
 }
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
-function workbench(requestJson=async()=>({status:200,data:[]})){
+test('订购前台默认使用买家登录，仓管身份转回后台且不加载买家业务',async()=>{
+  let requests=0;const {get,ui,location}=workbench(async()=>{requests++;return {data:[]};},'/shop');
+  assert.equal(get('#login-user').value,'buyer');assert.match(get('#auth-title').textContent,/订购/);
+  await ui.activateSession({id:3,username:'warehouse',roles:['ROLE_WAREHOUSE']});
+  assert.equal(location.redirected,'/#overview');assert.equal(requests,0);assert.equal(ui.state.me,null);
+});
+test('前台商品卡使用真实商品价格与选择回调，更新失败禁用操作',async()=>{
+  const {get,ui}=workbench(async()=>({data:{items:[{id:7,code:'SKU-7',name:'测试商品',price:25,active:true}],total:1,page:1,size:8,totalPages:1}}),'/shop');
+  ui.state.me={id:1,roles:['ROLE_BUYER']};await ui.loadMainList('products');
+  const cards=get('#storefront-catalog').children;assert.equal(cards.length,1);assert.match(cards[0].textContent,/SKU-7/);assert.match(cards[0].textContent,/25.00/);assert.doesNotMatch(cards[0].textContent,/下载|模板|实存|销量/);
+  ui.clearSession();assert.equal(get('#storefront-catalog').children.length,0);
+});
+function workbench(requestJson=async()=>({status:200,data:[]}),pathname=''){
   const elements=new Map(),sessionEvents=[],windowListeners={};
   const get=selector=>{if(!elements.has(selector))elements.set(selector,new Element(selector.replace('#','')));return elements.get(selector);};
   get('#cart-line-template').content={firstElementChild:new Element('cart-template')};
-  const document={addEventListener(){},querySelector:get,querySelectorAll:selector=>selector==='.cart-line'?get('#cart-lines').children:[],createElement:tag=>new Element(tag),createTextNode:text=>{const e=new Element();e.textContent=text;return e;}};
-  const context={document,window:{addEventListener(type,fn){windowListeners[type]=fn;},dispatchEvent(event){sessionEvents.push(event);}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},location:{hash:''},Node:Element,Option:class extends Element{constructor(text,value){super();this.textContent=text;this.value=value;}},Intl,Date,Map,Set,Number,String,Error,AbortSignal,crypto:{randomUUID:()=> 'new-key'},setTimeout:()=>0,clearTimeout(){},parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline,URLSearchParams,parseHash,queryHash,queryParams,validateRange,snapshotLabel,createDocumentUI:()=>({reset(){},show(){},createReceipt(){},createReturn(){}}),createProductPicker,createUiHelpers,createInventoryReports,newInventoryReports,requestJson,console};
+  const document={body:new Element('body'),addEventListener(){},querySelector:get,querySelectorAll:selector=>selector==='.cart-line'?get('#cart-lines').children:[],createElement:tag=>new Element(tag),createTextNode:text=>{const e=new Element();e.textContent=text;return e;}};
+  const context={document,window:{addEventListener(type,fn){windowListeners[type]=fn;},dispatchEvent(event){sessionEvents.push(event);}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},location:{hash:'',pathname,replace(target){this.redirected=target;}},Node:Element,Option:class extends Element{constructor(text,value){super();this.textContent=text;this.value=value;}},Intl,Date,Map,Set,Number,String,Error,AbortSignal,crypto:{randomUUID:()=> 'new-key'},setTimeout:()=>0,clearTimeout(){},parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline,URLSearchParams,parseHash,queryHash,queryParams,validateRange,snapshotLabel,createDocumentUI:()=>({reset(){},show(){},createReceipt(){},createReturn(){}}),createProductPicker,createUiHelpers,createInventoryReports,newInventoryReports,createStorefrontUI,requestJson,console};
   let source=readFileSync(new URL('../../main/resources/static/app.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
   source+='\nglobalThis.probe={state,showPage,activateSession,loadOperations,openStocktake,showOrder,withForm,openReceipt,clearSession,openOrderCommand,loadInventoryReport:typeof loadInventoryReport==="function"?loadInventoryReport:null,openAlertReceipt:typeof openAlertReceipt==="function"?openAlertReceipt:null,openStockPolicy:typeof openStockPolicy==="function"?openStockPolicy:null,loadMainList:typeof loadMainList==="function"?loadMainList:null,openProduct:typeof openProduct==="function"?openProduct:null,rememberProducts:typeof rememberProducts==="function"?rememberProducts:null,openProductPicker:typeof openProductPicker==="function"?openProductPicker:null,openProductEditor:typeof openProductEditor==="function"?openProductEditor:null,pickProduct};';
   vm.runInNewContext(source,context);

@@ -51,4 +51,13 @@ class RuntimeHealthIntegrationTest {
     @Test void loginCanLoadAllNewModulesBeforeAuthentication()throws Exception{
         for(String path:java.util.List.of("/query-state.mjs","/business-documents.mjs","/document-state.mjs")){var response=get(path,null);assertEquals(200,response.statusCode(),path);assertTrue(response.headers().firstValue("content-type").orElse("").contains("javascript"),path);}
     }
+    @Test void buyerStorefrontUsesPublicShellAndKeepsBusinessAuthentication()throws Exception{
+        for(String path:java.util.List.of("/shop","/shop/")){
+            var reply=get(path,null);assertEquals(200,reply.statusCode(),reply.body());
+            assertTrue(reply.body().contains("storefront-header"));
+        }
+        for(String path:java.util.List.of("/assets/ui/storefront.mjs","/assets/ui/storefront.css"))assertEquals(200,get(path,null).statusCode(),path);
+        assertEquals(401,get("/api/skus/page",null).statusCode());
+        assertEquals(401,get("/api/orders",null).statusCode());
+    }
 }
