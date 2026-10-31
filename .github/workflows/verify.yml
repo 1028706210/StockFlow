@@ -10,6 +10,16 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  digital-store-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: node --test digital-store/tests/*.test.mjs
+
   mysql-tests:
     runs-on: ubuntu-latest
     services:
@@ -64,15 +74,12 @@ jobs:
       STOCKFLOW_HTTP_PORT: '8083'
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose config --quiet
-      - run: docker compose up -d --build
-      - name: Wait for the application
-        run: |
-          for n in $(seq 1 90); do
-            if curl -fsS http://127.0.0.1:8083/ >/dev/null; then exit 0; fi
-            sleep 2
-          done
-          exit 1
+      - name: Verify container startup script boundaries
+        shell: pwsh
+        run: ./src/test/scripts/container-start.test.ps1
+      - name: Start through the documented entry point and wait for database readiness
+        shell: pwsh
+        run: ./tools/Start-Container.ps1
       - name: Check authenticated API and database
         run: |
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8083/api/auth/me)" = 401
