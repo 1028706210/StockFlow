@@ -1,0 +1,84 @@
+{
+  "date": "2026-11-01",
+  "baseCommit": "bcfe2728163f4beb7eb464a57f6009de67b18b24",
+  "scope": "商品资料与招聘展示准备",
+  "node": {
+    "stockflow": 104,
+    "digitalStore": 28,
+    "total": 132,
+    "pass": 132,
+    "fail": 0,
+    "skip": 0
+  },
+  "java": {
+    "verifyTotal": 107,
+    "pass": 106,
+    "fail": 0,
+    "error": 0,
+    "skip": 1,
+    "skippedScope": "大数据证据专项未设置启用开关",
+    "migrationTestsIncluded": true,
+    "finalMetadataRegression": {
+      "total": 2,
+      "pass": 2
+    }
+  },
+  "package": "BUILD SUCCESS",
+  "showcase": {
+    "database": "stockflow_showcase",
+    "port": 8096,
+    "products": 8,
+    "receipts": 8,
+    "orders": 5,
+    "returns": 1,
+    "repeatedPreparation": "重复执行未增加入库单或订单数量，固定安全库存幂等校准",
+    "reconciliationMismatches": 0
+  },
+  "artwork": {
+    "files": 8,
+    "kind": "原创路径SVG示意，非实物照片",
+    "xmlCheck": true,
+    "browserLoaded": 8,
+    "externalResources": false
+  },
+  "browser": {
+    "name": "Edge",
+    "desktop": true,
+    "viewports": [
+      {
+        "width": 390,
+        "height": 844,
+        "pageWidth": 375
+      },
+      {
+        "width": 320,
+        "height": 740,
+        "pageWidth": 305
+      }
+    ],
+    "productDetails": true,
+    "warehouseEditorSavedAndRestored": true,
+    "orderSpecificationAndUnitVisible": true,
+    "physicalPhone": false
+  },
+  "recovery": {
+    "tables": 13,
+    "schemaVersion": 7,
+    "inventoryViolations": 0,
+    "ledgerMismatches": 0,
+    "orderReservationMismatches": 0,
+    "elapsedMilliseconds": 2130,
+    "privateBackup": true
+  },
+  "review": {
+    "critical": 0,
+    "corrected": "固定展示商品中断后遗漏安全库存初始化；统一计量单位文案；说明换型号/单位应新建SKU"
+  },
+  "limits": [
+    "未开通真实物流、支付或资金退款",
+    "正式生产账号维护、限流、告警尚未实现；只准备上线清单",
+    "响应式视口模拟不是实体手机验收",
+    "未删除原开发数据，未覆盖恢复库",
+    "当前浏览器截图在验收交互中查看，未生成新的截图文件交付包"
+  ]
+}

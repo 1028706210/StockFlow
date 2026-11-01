@@ -2,6 +2,7 @@ import {createProductPicker} from '/assets/ui/product-picker.mjs';
 import {createUiHelpers} from '/assets/ui/ui-helpers.mjs';
 import {createInventoryReports,newInventoryReports} from '/assets/ui/inventory-reports.mjs';
 import {createStorefrontUI} from '/assets/ui/storefront.mjs';
+import {productFields} from '/assets/ui/product-content.mjs';
 import {parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline} from '/ui-model.mjs';
 
 import {requestJson} from '/api-client.mjs';
@@ -266,7 +267,7 @@ function renderTable(kind){
       if(kind==='products'){
         cell(row,copyIdentifier(item.code));cell(row,money(item.price),'number');cell(row,badge(item.active?'在售':'停用',item.active?'success':'neutral'));
         const actions=node('div',undefined,'cell-actions');actions.append(action('详情',()=>openProduct(id)));
-        if(warehouse())actions.append(action('编辑',()=>openProductEditor(item)),action('入库',()=>openAlertReceipt({...item,skuId:id})));
+        if(warehouse())actions.append(action('编辑',async()=>{if(item.unit===undefined){await openProduct(id);if(state.productDetail?.id===id)openProductEditor(state.productDetail.product);}else openProductEditor(item);}),action('入库',()=>openAlertReceipt({...item,skuId:id})));
         else if(item.active)actions.append(action('选购',()=>pickProduct(id)));
         cell(row,actions,'right');
       }else{
@@ -383,7 +384,7 @@ async function showOrder(id,scope=buyer()?'orders':'fulfillment'){
     const thead=node('thead');thead.append(head);const body=node('tbody');
     for(const item of order.items){
       const row=node('tr'),label=snapshotLabel(item);
-      cell(row,productCell({name:label.name},label.code));cell(row,String(item.quantity),'number');cell(row,money(item.unitPrice),'number');cell(row,money(Number(item.unitPrice)*item.quantity),'number');body.append(row);
+      const info=productCell({name:label.name},label.code);info.append(node('span',item.specification||'规格未记录','subtext'));cell(row,info);cell(row,item.quantity+' '+(item.unit||'（历史单位未记录）'),'number');cell(row,money(item.unitPrice),'number');cell(row,money(Number(item.unitPrice)*item.quantity),'number');body.append(row);
     }
     table.append(thead,body);const scroll=node('div',undefined,'table-scroll');scroll.append(table);
     const total=node('div',undefined,'detail-total');total.append(node('span','服务端订单金额'),node('strong',money(order.total)));
@@ -459,7 +460,7 @@ for(const kind of ['orders','fulfillment'])$('#'+kind+'-status').addEventListene
 $('#sku-form').addEventListener('submit',event=>{
   event.preventDefault();return withForm(event.target,'#sku-error',async()=>{
     const data=new FormData(event.target);priceToCents(data.get('price'));
-    await request('POST','/api/skus',{code:data.get('code').trim(),name:data.get('name').trim(),price:Number(data.get('price'))});
+    await request('POST','/api/skus',{code:data.get('code').trim(),name:data.get('name').trim(),price:Number(data.get('price')),...productFields(data)});
     $('#sku-dialog').close();toast('商品已创建，可以继续为商品入库。');await refreshData();
   });
 });
@@ -474,7 +475,7 @@ $('#receipt-form').addEventListener('submit',event=>{
     $('#receipt-search-trigger').disabled=true;const {skuId,...payload}=state.receiptAttempt;$('#receipt-product').disabled=true;$('#receipt-form input[name=quantity]').disabled=true;$('#receipt-reset').hidden=false;
     const {data:stock}=await request('POST','/api/inventory/'+skuId+'/receipts',payload);
     state.receiptConfirmed=true;
-    message('#receipt-success','本次入库已确认：实存 '+stock.onHand+' 件，可用 '+stock.available+' 件。重试本次操作不会重复增加库存。');
+    message('#receipt-success','本次入库已确认：实存数量 '+stock.onHand+'，可用数量 '+stock.available+'。重试本次操作不会重复增加库存。');
     $('#receipt-submit').textContent='重试本次入库';toast('入库结果已确认。');await refreshData();if($('#product-dialog').open&&state.productDetail?.id===skuId)await openProduct(skuId);
   });
 });
@@ -523,17 +524,17 @@ async function openProduct(id){
 function renderProductDetail(){
   const detail=state.productDetail;if(!detail)return;
   const {product,stock}=detail,facts=node('dl',undefined,'product-facts');
-  for(const [label,value]of [['SKU 编码',product.code],['销售单价',money(product.price)],['销售状态',product.active?'在售':'停用']]){const wrap=node('div');wrap.append(node('dt',label),node('dd',value));facts.append(wrap);}
+  for(const [label,value]of [['SKU 编码',product.code],['销售单价',money(product.price)],['销售状态',product.active?'在售':'停用'],['分类',product.category||'未分类'],['规格',product.specification||'待补充'],['计量单位',product.unit||'件']]){const wrap=node('div');wrap.append(node('dt',label),node('dd',value));facts.append(wrap);}
   const actions=node('div',undefined,'product-actions');
   if(warehouse())actions.append(button('编辑商品',()=>openProductEditor(product),'button secondary'),button('建立盘点',()=>openStocktakeCreate(product),'button secondary'),button('商品入库',()=>openAlertReceipt({...product,skuId:product.id}),'button primary'));
   else if(product.active)actions.append(button('加入订单',()=>{$('#product-dialog').close();pickProduct(product.id);},'button primary'));
-  const content=$('#product-detail-content');content.replaceChildren(facts,actions);
+  const content=$('#product-detail-content');content.replaceChildren(facts,node('p',product.description||'暂无商品说明。','product-description'),actions);
   if(stock){
     const section=node('section',undefined,'drawer-section'),metrics=node('div',undefined,'product-stock');
     section.append(node('h3','当前库存'));
     for(const [label,value]of [['实存量',stock.onHand],['已预留',stock.reserved],['可用量',stock.available]]){const metric=node('div');metric.append(node('small',label),node('strong',String(value)));metrics.append(metric);}
     section.append(metrics,node('p','可用量 = 实存量 − 已预留量','fine'));
-    const policy=node('div',undefined,'stock-policy-card'),policyCopy=node('div');policyCopy.append(node('strong','安全库存 '+stock.safetyStock+' 件'),node('p',!product.active?'商品已停用，不计入库存预警。':stock.available<stock.safetyStock?'低于安全线，建议补货 '+(stock.safetyStock-stock.available)+' 件。':'当前可用库存达到安全线。','fine'));
+    const policy=node('div',undefined,'stock-policy-card'),policyCopy=node('div');policyCopy.append(node('strong','安全库存 '+stock.safetyStock+' '+(product.unit||'件')),node('p',!product.active?'商品已停用，不计入库存预警。':stock.available<stock.safetyStock?'低于安全线，建议补货 '+(stock.safetyStock-stock.available)+' '+(product.unit||'件')+'。':'当前可用库存达到安全线。','fine'));
     policy.append(policyCopy,button('调整规则',()=>openStockPolicy({...stock,name:product.name,code:product.code}),'button secondary compact'));section.append(policy);content.append(section);
     const journal=node('section',undefined,'drawer-section');journal.append(node('h3','库存流水'));const entries=node('div',undefined,'product-ledger');entries.id='product-ledger';journal.append(entries);content.append(journal);renderProductLedger();
   }
@@ -567,6 +568,8 @@ function renderProductLedger(){
 function openProductEditor(product){
   if(!warehouse()||$('#product-edit-form').dataset.busy==='true')return;
   state.editingProduct=product;$('#product-edit-code').textContent='SKU '+product.code+' · 编码保持不变';
+  for(const key of ['category','specification','unit','description'])$('#product-edit-'+key).value=product[key]||(key==='unit'?'件':'');
+  $('#product-edit-information').hidden=product.unit===undefined;
   $('#product-edit-name').value=product.name;$('#product-edit-price').value=String(product.price);$('#product-edit-active').value=String(product.active);message('#product-edit-error');
   if(!$('#product-edit-dialog').open)$('#product-edit-dialog').showModal();
 }
@@ -575,7 +578,7 @@ $('#product-edit-form').addEventListener('submit',event=>{
     const product=state.editingProduct;if(!product)throw new Error('请重新选择商品。');
     const name=$('#product-edit-name').value.trim(),price=$('#product-edit-price').value;
     if(!name)throw new Error('商品名称不能为空。');priceToCents(price);
-    const {data}=await request('PUT','/api/skus/'+product.id,{name,price:Number(price),active:$('#product-edit-active').value==='true'});
+    const {data}=await request('PUT','/api/skus/'+product.id,{name,price:Number(price),active:$('#product-edit-active').value==='true',...(product.unit===undefined?{}:productFields(new FormData(event.target)))});
     rememberProducts([data]);$('#product-edit-dialog').close();toast('商品信息已更新。');
     await refreshData();if($('#product-dialog').open&&state.productDetail?.id===product.id)await openProduct(product.id);
   });
@@ -598,7 +601,7 @@ function renderOrderTimeline(order){
 function openStockPolicy(item){
   if(!warehouse()||$('#policy-form').dataset.busy==='true')return;
   state.stockPolicy={...item};$('#policy-product').textContent=item.name+' · '+item.code;$('#policy-safety-stock').value=String(item.safetyStock??10);
-  $('#policy-available').textContent='当前可用 '+item.available+' 件';message('#policy-error');if(!$('#policy-dialog').open)$('#policy-dialog').showModal();
+  $('#policy-available').textContent='当前可用数量 '+item.available;message('#policy-error');if(!$('#policy-dialog').open)$('#policy-dialog').showModal();
 }
 $('#policy-form').addEventListener('submit',event=>{
   event.preventDefault();return withForm(event.target,'#policy-error',async()=>{

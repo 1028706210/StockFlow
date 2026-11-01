@@ -50,6 +50,13 @@ body[data-surface="storefront"] .login-story .journey{display:none}
 @media(prefers-reduced-motion:reduce){.store-product{transition:none}.store-product:hover{transform:none}}
 
 /* 买家手机列表保留关键列，时间信息在详情中完整展示。 */
+.product-information{border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;min-width:0}
+.product-information legend{padding:0 6px;color:var(--muted);font-size:12px}
+.product-information textarea{width:100%;resize:vertical;background:var(--field,#101a24);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
+.product-description{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8;color:var(--muted)}
+.store-specification{color:var(--muted);font-size:12px;line-height:1.7;margin:0 0 18px;overflow-wrap:anywhere}
+.store-product-image{width:100%;height:auto;aspect-ratio:3/2;object-fit:contain;border-radius:8px}
+.store-artwork-note{color:var(--muted);font-size:10px;margin:8px 0 20px}
 @media(max-width:760px){
   body[data-surface="storefront"] #view-orders table,
   body[data-surface="storefront"] #view-returns table{min-width:0;width:100%;table-layout:fixed;white-space:normal}

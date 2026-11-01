@@ -4,7 +4,7 @@
 
 当前有12张业务表，另有Flyway管理的flyway_schema_history。使用MySQL 8 InnoDB；本机私库默认utf8mb4_0900_as_cs，编码、账号、请求键等部分字段使用ASCII及区分大小写比较。Compose和CI库的默认collation由MySQL映像环境决定，不能假设所有环境字串比较完全相同。
 
-本字典逐行取自执行中的迁移源：`src/main/resources/db/migration/B004__legacy_schema.sql`、V005、V006。SQL仍是DDL权威；下表的键、默认与CHECK按原文保留，所有关系不自动等同于数据库外键。
+本字典逐行取自执行中的迁移源：`src/main/resources/db/migration/B004__legacy_schema.sql`、V005、V006、V007。SQL仍是DDL权威；下表的键、默认与CHECK按原文保留，所有关系不自动等同于数据库外键。
 
 ## 关系与用途
 
@@ -284,3 +284,8 @@ return_item 表级键与约束：
 Flyway使用B004建立空库基线，V005新增订单名称／编码，V006新增入库退货表及流水关联。已有无历史表的已知V004结构，先校验再baseline4；未知或受损库不自动接管。根目录db/migrations保留旧审阅数据，schema.sql不再建表，不手工重放旧SQL。
 
 迁移不为旧明细回填现名。schema_history记录版本和校验值，不能随意删改。后续变更新增V007等新档案并测空库、已知旧库、重启和数据保留；现有版本没有down migration或自动清理历史数据策略。
+## 商品资料增量说明（V007，2026-11-01）
+
+`sku` 新增 `category VARCHAR(40)`、`specification VARCHAR(120)`、`unit VARCHAR(12)`、`description VARCHAR(1000)`，均不为空；旧商品分类、规格、说明缺省为空，单位缺省为“件”。这不是多规格变体或单位换算模型，更换实物型号或计量方式应使用新 SKU。
+
+`order_item` 新增可空的 `specification`、`unit`，新订单在同一事务内从商品资料保存快照；旧单保持 NULL，不回填当前商品资料。运行迁移以 `src/main/resources/db/migration` 为准，`db/migrations` 仅为对应参考副本；不得改写已执行迁移。

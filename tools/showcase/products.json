@@ -1,0 +1,10 @@
+[
+  {"code":"SF-DEMO-CUP","name":"雾白随行保温杯","price":79.90,"category":"随行用品","specification":"350mL / 雾白","unit":"个","description":"用于展示单仓订购流程的保温杯样例。原创矢量图仅为商品示意，不代表实物照片或检测认证。","quantity":24,"safetyStock":8},
+  {"code":"SF-DEMO-NOTE","name":"米白点阵笔记本","price":18.50,"category":"办公文具","specification":"A5 / 80页 / 米白","unit":"本","description":"记录日常计划与笔记的展示样例。页面数与尺寸为演示规格，图片为原创示意。","quantity":30,"safetyStock":10},
+  {"code":"SF-DEMO-PEN","name":"墨绿按动中性笔","price":4.50,"category":"办公文具","specification":"0.5mm / 黑色笔芯","unit":"支","description":"适合演示多商品合单与不同计量单位。图片为原创示意。","quantity":3,"safetyStock":10},
+  {"code":"SF-DEMO-BAG","name":"原色棉麻手提袋","price":29.00,"category":"随行用品","specification":"32×36cm / 原色","unit":"个","description":"日常收纳用品展示样例。图中款式为原创示意，不作材质或环保认证承诺。","quantity":20,"safetyStock":6},
+  {"code":"SF-DEMO-BOX","name":"原木桌面收纳盒","price":69.00,"category":"桌面收纳","specification":"双分区 / 24×12cm","unit":"个","description":"用于展示桌面收纳分类、库存预警和订单履约。图片为原创示意。","quantity":16,"safetyStock":5},
+  {"code":"SF-DEMO-CABLE","name":"雾灰编织充电线","price":25.00,"category":"数码配件","specification":"1m / USB-C接口","unit":"条","description":"数码配件展示样例，不承诺未经验证的功率、兼容性或认证。图片为原创示意。","quantity":28,"safetyStock":8},
+  {"code":"SF-DEMO-BOTTLE","name":"青苔绿随行水壶","price":49.00,"category":"随行用品","specification":"500mL / 青苔绿","unit":"个","description":"用于演示规格与单位随订单保存。图片为原创示意，不作食品接触材料认证承诺。","quantity":18,"safetyStock":5},
+  {"code":"SF-DEMO-POUCH","name":"炭灰便携收纳包","price":39.00,"category":"桌面收纳","specification":"20×12cm / 炭灰","unit":"个","description":"展示收纳类商品的搜索与详情信息。图片为原创示意。","quantity":12,"safetyStock":4}
+]

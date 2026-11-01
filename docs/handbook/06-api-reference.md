@@ -147,3 +147,8 @@ POST `/api/returns`：`{"requestKey":"return-demo-001","orderId":1,"reason":"整
 | POST | /api/returns/{id}/cancel | B | 本人取消待处理申请 |
 
 相容阵列接口只返回最近或受限记录，不用于完整业务统计。前端新列表优先用/page；接口示例见仓库 `examples/stockflow.http`。本文件是人工核对的接口契约，没有宣称已安装Swagger或生成OpenAPI服务。
+## 商品资料接口补充（2026-11-01）
+
+商品创建/编辑及读取继续使用 `/api/skus`、`/api/skus/{id}` 和 `/api/skus/page`。新增可选字段：分类 `category`（40字符）、规格 `specification`（120字符）、单位 `unit`（12字符）、说明 `description`（1000字符）。创建缺省为空，单位缺省“件”；编辑省略或传 NULL 保留已有值，显式空字符串清空文字字段，单位空白回退“件”。仍由仓管维护、买家只读，长度超限返回400。新订单明细包含规格/单位快照；历史缺失值为 NULL。
+
+可选本地展示标志开启时，仓管可读取 `/api/showcase/identity`；只有实际连接 `stockflow_showcase` 才返回展示环境标记，错误数据库返回409。该标记接口默认关闭，不接受数据库名称参数，不创建或重置数据。

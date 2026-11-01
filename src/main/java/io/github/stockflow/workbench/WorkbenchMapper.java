@@ -26,7 +26,7 @@ public interface WorkbenchMapper {
     String ORDER_RANGE="<if test='range.from != null'> AND created_at &gt;= #{range.from}</if><if test='range.toExclusive != null'> AND created_at &lt; #{range.toExclusive}</if><if test='range.minTotal != null'> AND total &gt;= #{range.minTotal}</if><if test='range.maxTotal != null'> AND total &lt;= #{range.maxTotal}</if>";
     @Select("<script>SELECT COUNT(*)"+SKU_MATCH+"</script>")
     long skuCount(@Param("pattern")String pattern,@Param("status")String status);
-    @Select("<script>SELECT s.id,s.code,s.name,s.price,s.active"+SKU_MATCH+" ORDER BY s.id DESC LIMIT #{size} OFFSET #{offset}</script>")
+    @Select("<script>SELECT s.id,s.code,s.name,s.price,s.active,s.category,s.specification,s.unit,s.description"+SKU_MATCH+" ORDER BY s.id DESC LIMIT #{size} OFFSET #{offset}</script>")
     List<Sku> skus(@Param("pattern")String pattern,@Param("status")String status,@Param("offset")long offset,@Param("size")int size);
     @Select("<script>SELECT COUNT(*)"+STOCK_MATCH+"</script>")
     long stockCount(@Param("pattern")String pattern,@Param("status")String status);

@@ -8,6 +8,22 @@
 
 ![StockFlow 库存与订单工作台，实际界面截图](docs/screenshots/operations-overview.png)
 
+## 招聘者从这里开始
+
+- 买家前台：Java 本机运行后访问 [商品订购](http://127.0.0.1:8082/shop#products)。
+- 仓管后台：访问 [库存与履约工作台](http://127.0.0.1:8082/)。Docker 默认端口为 8083，两个入口路径相同。
+- 推荐展示环境：执行下方脚本，使用独立的 stockflow_showcase 库和 8096 端口；固定中文商品、原创商品示意、真实保存的演示订单，不改动原开发库。
+
+```powershell
+# Windows；需要 PowerShell 7、Java 17、MySQL 8、Node.js 24，首次打包另需 Maven
+pwsh -File ./tools/Start-Showcase.ps1
+# Maven 不在 PATH 时添加 -Maven '你的 Maven 目录/bin/mvn.cmd'
+```
+
+准备成功后打开 [展示买家端](http://127.0.0.1:8096/shop#products) 或 [展示仓管端](http://127.0.0.1:8096/)。演示账号 buyer / buyer2 / warehouse / admin；本机口令在忽略提交的 .local/showcase.json 的 demoPassword。重复准备保留已有数据与超时规则，不提供自动清库。
+
+[展示环境说明](docs/showcase.md) · [五分钟演示](docs/recruiter-guide.md) · [验证索引](docs/verification.md)
+
 ## 技术栈
 
 | 层次 | 当前实现 |
@@ -75,14 +91,7 @@ docker compose --env-file .local/compose.env down
 
 ## 验证证据
 
-| 范围 | 已有结果 | 如何核对 |
-|---|---|---|
-| 已发布版本 `f3f968f` 的 CI | `mysql-tests`、`container-smoke` 均成功，包含迁移与大数据测试配置 | [准确提交的运行记录](https://github.com/1028706210/StockFlow/actions/runs/41173280488) |
-| 2026-10-31 本地发布快照 | StockFlow 前端 96 项 + 数字商城 28 项，共 124 项通过；不是 Java 测试数量 | [发布复核](docs/recruiter-readiness.md) |
-| 真实 Edge 业务链路 | 入库、下单履约、收货、退货回库及两商品对账；有单号与 API 交叉核验 | [2026-10-30 原始记录](docs/evidence/2026-10-30-lifecycle.json) |
-| 买家界面与隔离 | 专属导航、在售筛选、帮助及越角色路由；写流程另由 MySQL 集成覆盖 | [买家范围验收](docs/buyer-scope-qa.md) |
-
-仓库当前的检查结果以顶部 CI 为准；历史浏览器记录只代表已记录的步骤，不是全端验收或生产性能结论。
+当前验证记录统一在 [验证索引](docs/verification.md) 维护。上方 CI 标记对应公开 main 分支；索引按日期和提交区分历史记录，前端测试数量不计为 Java 测试数量。
 
 ```powershell
 # 需要 Node.js 24；无需 npm install

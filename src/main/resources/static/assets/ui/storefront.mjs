@@ -1,4 +1,5 @@
 // 买家入口只改变信息组织，商品、身份、下单和履约继续使用主应用。
+import {productSummary,productArtwork} from './product-content.mjs';
 export const isStorefrontPath = path => /^\/shop\/?$/.test(path || '');
 export function createStorefrontUI({document,location,node,button,money}) {
   const enabled=isStorefrontPath(location.pathname),$=selector=>document.querySelector(selector);
@@ -39,12 +40,14 @@ export function createStorefrontUI({document,location,node,button,money}) {
       const card=node('article',undefined,'store-product');
       const top=node('div',undefined,'store-product-top');top.append(node('span',item.code,'store-sku'),node('span','在售商品','store-sale'));
       const title=button(item.name,()=>detail(item.id),'store-product-name');title.disabled=list.loading||!!list.error;
-      const price=node('div',undefined,'store-price');price.append(node('strong',money(item.price)),node('span','/ 件'));
+      const price=node('div',undefined,'store-price');price.append(node('strong',money(item.price)),node('span','/ '+(item.unit||'件')));
       const meta=node('p','库存以下单校验为准。','store-stock-note');
       const actions=node('div',undefined,'store-product-actions');
       const more=button('商品详情',()=>detail(item.id),'button secondary'),choose=button('加入订购单',()=>pick(item.id),'button primary');
       more.disabled=choose.disabled=list.loading||!!list.error||!item.active;
-      actions.append(more,choose);card.append(top,title,price,meta,actions);grid.append(card);
+      const source=productArtwork(item);
+      if(source){const image=node('img',undefined,'store-product-image');image.src=source;image.alt=item.name+' · 原创商品示意，非实物照片';image.loading='lazy';image.width=480;image.height=320;card.append(image,node('span','原创商品示意','store-artwork-note'));}
+      actions.append(more,choose);card.append(top,title,node('p',productSummary(item),'store-specification'),price,meta,actions);grid.append(card);
     }
     grid.setAttribute('aria-busy',String(list.loading));
   }

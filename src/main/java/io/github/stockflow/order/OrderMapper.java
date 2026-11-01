@@ -31,10 +31,10 @@ public interface OrderMapper {
     int confirm(long id);
     @Update("UPDATE customer_order SET status=#{state},cancel_reason=#{reason},shipped_at=CASE WHEN #{state}='SHIPPED' THEN CURRENT_TIMESTAMP(6) ELSE shipped_at END,completed_at=CASE WHEN #{state}='COMPLETED' THEN CURRENT_TIMESTAMP(6) ELSE completed_at END,cancelled_at=CASE WHEN #{state}='CANCELLED' THEN CURRENT_TIMESTAMP(6) ELSE cancelled_at END WHERE id=#{id}")
     int transition(@Param("id")long id,@Param("state")String state,@Param("reason")String reason);
-    @Insert("INSERT INTO order_item(order_id,sku_id,quantity,unit_price,sku_code,sku_name) VALUES(#{order},#{sku},#{quantity},#{price},#{code},#{name})")
-    int item(@Param("order")long order,@Param("sku")long sku,@Param("quantity")int quantity,@Param("price")BigDecimal price,@Param("code")String code,@Param("name")String name);
+    @Insert("INSERT INTO order_item(order_id,sku_id,quantity,unit_price,sku_code,sku_name,specification,unit) VALUES(#{order},#{sku},#{quantity},#{price},#{code},#{name},#{specification},#{unit})")
+    int item(@Param("order")long order,@Param("sku")long sku,@Param("quantity")int quantity,@Param("price")BigDecimal price,@Param("code")String code,@Param("name")String name,@Param("specification")String specification,@Param("unit")String unit);
     @Update("UPDATE customer_order SET total=#{total} WHERE id=#{id}")
     int total(@Param("id")long id,@Param("total")BigDecimal total);
-    @Select("SELECT sku_id,quantity,unit_price,sku_code,sku_name FROM order_item WHERE order_id=#{id} ORDER BY sku_id")
+    @Select("SELECT sku_id,quantity,unit_price,sku_code,sku_name,specification,unit FROM order_item WHERE order_id=#{id} ORDER BY sku_id")
     List<Item> items(long id);
 }

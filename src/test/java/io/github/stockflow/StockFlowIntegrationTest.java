@@ -90,6 +90,45 @@ class StockFlowIntegrationTest {
         }
         assertEquals(0,count("sku"));
     }
+    @Test void productInformationIsSharedAndOrderSpecificationIsHistorical() throws Exception {
+        String body="""
+            {"code":"PROFILE-CUP","name":"雾白随行杯","price":79.90,"category":"随行用品","specification":"350mL / 雾白","unit":"个","description":"演示商品，商品图为原创示意。"}
+            """;
+        var created=request("warehouse","POST","/api/skus",body);
+        assertEquals(201,created.status(),created.body().toString());
+        long id=created.body().path("id").asLong();
+        var listed=request("buyer","GET","/api/skus/page?q=PROFILE-CUP",null);
+        assertEquals("350mL / 雾白",listed.body().path("items").get(0).path("specification").asText());
+        assertEquals("个",request("buyer","GET","/api/skus/"+id,null).body().path("unit").asText());
+        receipt(id,5,"profile-in");
+        var order=request("buyer","POST","/api/orders",order("profile-order",id,1));
+        assertEquals(201,order.status(),order.body().toString());
+        long orderId=order.body().path("id").asLong();
+        String update="""
+            {"name":"新名称","price":89.90,"active":true,"category":"随行用品","specification":"500mL / 墨绿","unit":"只","description":"新说明"}
+            """;
+        assertEquals(403,request("buyer","PUT","/api/skus/"+id,update).status());
+        assertEquals(200,request("warehouse","PUT","/api/skus/"+id,update).status());
+        var historical=request("buyer","GET","/api/orders/"+orderId,null).body().path("items").get(0);
+        assertEquals("雾白随行杯",historical.path("skuName").asText());
+        assertEquals("350mL / 雾白",historical.path("specification").asText());
+        assertEquals("个",historical.path("unit").asText());
+        String legacyUpdate="{\"name\":\"旧客户端编辑\",\"price\":89.90,\"active\":true}";
+        assertEquals(200,request("warehouse","PUT","/api/skus/"+id,legacyUpdate).status());
+        var current=request("buyer","GET","/api/skus/"+id,null).body();
+        assertEquals("500mL / 墨绿",current.path("specification").asText());
+        assertEquals("只",current.path("unit").asText());
+        assertEquals("新说明",current.path("description").asText());
+    }
+    @Test void optionalProductInformationHasLimitsAndOldRequestsRemainValid() throws Exception {
+        long id=sku("OLD-CLIENT","2.00");
+        assertEquals("件",request("buyer","GET","/api/skus/"+id,null).body().path("unit").asText());
+        String invalid="{\"code\":\"LONG-PROFILE\",\"name\":\"名称\",\"price\":1,\"description\":\""+"长".repeat(1001)+"\"}";
+        assertEquals(400,request("warehouse","POST","/api/skus",invalid).status());
+        String update="{\"name\":\"旧客户端编辑\",\"price\":3,\"active\":true}";
+        assertEquals(200,request("warehouse","PUT","/api/skus/"+id,update).status());
+        assertEquals("件",request("buyer","GET","/api/skus/"+id,null).body().path("unit").asText());
+    }
     @Test void creatingAnOrderReservesInventoryAndSnapshotsTheServerPrice() throws Exception {
         long id=sku("MUG","12.50");receipt(id,10,"in-1");
         var r=request("buyer","POST","/api/orders",order("buy-1",id,3));
