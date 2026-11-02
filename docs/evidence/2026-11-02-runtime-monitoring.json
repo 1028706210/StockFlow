@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-02",
+  "baseCommit": "c98f77271fbec7da4ad2bcd17a87c13d922d1a3c",
+  "scope": "管理员运行状态、扫描生命周期与只读故障排查",
+  "java": {"total":123,"pass":122,"fail":0,"error":0,"skip":1,"skippedScope":"本机未启用大数据专项","build":"BUILD SUCCESS","includesIsolatedMigrationTests":true},
+  "node": {"stockflow":116,"digitalStore":28,"total":144,"pass":144,"fail":0,"skip":0},
+  "redGreen": [
+    "最初HTTP/探针专项9项中3项失败：缺少诊断接口与批次状态，随后12项专项通过",
+    "新指标构造与完成接口、前端模块最初缺失，新增后测试通过",
+    "独立审查的运行页登录初始化回归先失败，修复后完整Node144项通过"
+  ],
+  "earlierFailedRuns": [
+    "沙箱内本机Maven缓存访问失败，正常本机权限重跑后取得实际行为失败证据",
+    "首次完整回归1项失败：共享Spring上下文已有手动扫描，HTTP测试错误假设NEVER；改为检查状态域，独立单元仍验证NEVER",
+    "环境暂停后数据库已停止，完整回归出现103项初始化错误；日志根因为Connection refused，恢复既有3308数据库后重新完整通过"
+  ],
+  "review": {
+    "completed":true,"remainingCritical":0,"remainingImportant":0,"deferredMinor":0,
+    "importantFixed":"#runtime直接登录仍执行基础业务初始化，商品/库存/概览可用",
+    "acceptedBoundaries":[
+      "累计5xx警示色有历史说明，不代表持续故障",
+      "任务禁用仍保留历史，优先显示未启用",
+      "空批次可以成功，候选成功不等于取消数",
+      "运行中保留历史成功/失败时间，当前明确显示RUNNING",
+      "HTTP近似累计快照包含诊断，自身响应完成后才计数",
+      "诊断与对账不是同一事务快照，对账本身仍一致",
+      "allSettled等待慢请求，期间清空旧结果，客户端有超时",
+      "同身份可更新隐藏区域，重进会重检，退出/切号使旧请求失效",
+      "数据库断开可能先使身份无法核验，外部探针另查",
+      "不扩大到JVM致命Error恢复，沿用业务RuntimeException边界",
+      "未承诺心跳阈值、扫描超时或外部通知",
+      "静态CSS审查不是视觉验收，实际页面由主代理Edge检查"
+    ]
+  },
+  "browser": {
+    "name":"Edge","url":"http://127.0.0.1:8096/#runtime","database":"stockflow_showcase",
+    "adminDirectLogin":true,"productsAfterRuntimeLogin":true,"overviewAfterRuntimeLogin":true,
+    "actualSchedulerCompletedBatch":true,"manualRefresh":true,"reconciliationChecked":8,"reconciliationMismatches":0,
+    "warehouseRuntimeNavigationAbsent":true,"warehouseRuntimeRouteShowsOverview":true,
+    "viewport":{"width":320,"height":740,"clientWidth":305,"scrollWidth":305,"cardWidth":272.8,"runbookLinkHeight":44,"horizontalOverflow":false},
+    "screenshots":["2026-11-02-runtime-desktop.png","2026-11-02-runtime-mobile.png"],
+    "physicalPhone":false,"databaseFaultInjectedInBrowser":false
+  },
+  "limits":[
+    "本页手动检查，无外部通知或持续监控",
+    "累计指标重启归零，不提供P95/P99或生产SLA",
+    "故障、部分失败和恢复由可控单元/隔离库及Node回归验证，未停止真实数据库制造故障",
+    "未修改演示账号、业务状态或库存规则，没有数据库迁移",
+    "未完成多浏览器、实体手机、生产安全审计或生产上线",
+    "最终远端CI须核对实际发布提交，不能使用旧绿灯"
+  ]
+}

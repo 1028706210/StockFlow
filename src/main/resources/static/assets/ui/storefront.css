@@ -80,3 +80,21 @@ body[data-surface="storefront"] .login-story .journey{display:none}
   body[data-surface="storefront"] #order-detail-content :is(th,td){padding:12px 6px;overflow-wrap:anywhere}
   body[data-surface="storefront"] #order-detail-content th:first-child{width:43%}
 }
+.runtime-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.runtime-heading .data-note{margin:0;overflow-wrap:anywhere}
+.runtime-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:20px}
+.runtime-card{padding:24px;min-width:0;min-height:162px}
+.runtime-label{display:block;color:var(--muted);font-size:12px;letter-spacing:.04em}
+.runtime-value{display:block;font-size:29px;line-height:1.3;margin:16px 0 12px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.runtime-card .data-note{margin:0;line-height:1.7}
+.runtime-detail-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;margin-bottom:20px}
+.runtime-detail{padding:26px;min-width:0}
+.runtime-detail h2{font-size:20px;margin:15px 0 20px;line-height:1.5}
+.runtime-state{display:block;font-size:21px;line-height:1.5;margin:14px 0 24px}
+#view-runtime .success{color:var(--brand)}#view-runtime .warning{color:var(--warning)}#view-runtime .danger{color:var(--danger)}
+.runtime-facts{display:grid;grid-template-columns:minmax(110px,.65fr) minmax(0,1fr);gap:13px 20px;margin:0 0 20px}
+.runtime-facts dt{color:var(--muted)}.runtime-facts dd{margin:0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.runtime-runbook{padding-left:20px;color:var(--muted);line-height:1.9;margin:0 0 28px}.runtime-runbook li+li{margin-top:14px}
+.runtime-links{display:flex;flex-wrap:wrap;gap:10px}.runtime-links .button{min-height:44px}
+@media(max-width:1180px){.runtime-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.runtime-detail-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.runtime-grid{grid-template-columns:minmax(0,1fr);gap:12px}.runtime-card,.runtime-detail{padding:20px}.runtime-card{min-height:144px}.runtime-heading{align-items:flex-start;flex-direction:column}.runtime-facts{grid-template-columns:minmax(0,1fr);gap:6px}.runtime-facts dd{margin-bottom:10px}.runtime-state{font-size:19px}}

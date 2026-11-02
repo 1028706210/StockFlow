@@ -51,6 +51,19 @@ class RuntimeHealthIntegrationTest {
     @Test void loginCanLoadAllNewModulesBeforeAuthentication()throws Exception{
         for(String path:java.util.List.of("/query-state.mjs","/business-documents.mjs","/document-state.mjs")){var response=get(path,null);assertEquals(200,response.statusCode(),path);assertTrue(response.headers().firstValue("content-type").orElse("").contains("javascript"),path);}
     }
+    @Test void diagnosticStatusIsAdminOnlyAndContainsNoPrivateConfiguration()throws Exception{
+        assertEquals(401,get("/api/admin/runtime",null).statusCode());
+        assertEquals(403,get("/api/admin/runtime","buyer").statusCode());
+        assertEquals(403,get("/api/admin/runtime","warehouse").statusCode());
+        var reply=get("/api/admin/runtime","admin");assertEquals(200,reply.statusCode(),reply.body());
+        var data=json.readTree(reply.body());assertEquals("UP",data.path("databaseStatus").asText());
+        assertFalse(data.path("expiryEnabled").asBoolean());assertEquals(30000,data.path("expiryDelayMillis").asLong());
+        assertFalse(data.path("observedAt").asText().isBlank());
+        assertTrue(data.path("metrics").path("process").path("uptimeSeconds").asLong(-1)>=0);
+        // 同一Spring测试上下文可能已经被履约测试手动扫描；禁用开关与实际批次历史是两个维度。
+        assertTrue(java.util.Set.of("NEVER","RUNNING","SUCCEEDED","PARTIAL_FAILED","FAILED").contains(data.path("metrics").path("expiry").path("lastBatch").path("status").asText()));
+        for(String forbidden:java.util.List.of("jdbc:","password","stackTrace","username","localhost","127.0.0.1"))assertFalse(reply.body().contains(forbidden),forbidden);
+    }
     @Test void buyerStorefrontUsesPublicShellAndKeepsBusinessAuthentication()throws Exception{
         for(String path:java.util.List.of("/shop","/shop/")){
             var reply=get(path,null);assertEquals(200,reply.statusCode(),reply.body());

@@ -4,6 +4,7 @@ import {createInventoryReports,newInventoryReports} from '/assets/ui/inventory-r
 import {createStorefrontUI} from '/assets/ui/storefront.mjs';
 import {productFields} from '/assets/ui/product-content.mjs';
 import {createAccountSecurity,canManageAccounts} from '/assets/ui/account-security.mjs';
+import {createRuntimeMonitor} from '/assets/ui/runtime-monitor.mjs';
 import {parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline} from '/ui-model.mjs';
 
 import {requestJson} from '/api-client.mjs';
@@ -14,6 +15,7 @@ const ui = createUiHelpers(document, Node);
 const {$,all,money,time,node,button,message,failure,badge,cell,productCell,empty} = ui;
 const storefrontUI=createStorefrontUI({document,location,node,button,money});
 const pages = {
+  runtime:['运行状态','运行状态','核验服务、订单超时扫描与库存一致性，所有检查均为只读。'],
   accounts:['账号管理','账号管理','仅管理员可启停账号；停用保留订单与审计，不能修改角色。'],
   receipts:['入库单','GOODS RECEIPTS','建立入库草稿，核对实物后确认入库。'],
   returns:['退货单','ORDER RETURNS','整单退货申请与实物接收记录，不涉及退款。'],
@@ -35,6 +37,7 @@ const state = {operations:newOperations(),stocktakeAttempt:null,stocktakeDetail:
 const warehouse = () => state.me?.roles.some(r => r==='ROLE_WAREHOUSE' || r==='ROLE_ADMIN');
 const buyer = () => state.me?.roles.includes('ROLE_BUYER');
 const accountSecurity=createAccountSecurity({document,getSession:()=>state,request,ui,onPasswordChanged:()=>clearSession('密码已修改，请使用新密码重新登录。')});
+const runtimeMonitor=createRuntimeMonitor({document,getSession:()=>state,request,ui});
 let toastTimer;
 function toast(message,error=false) {
   clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').className='toast'+(error?' error':'');$('#toast').hidden=false;
@@ -56,6 +59,7 @@ async function ensureCsrf(force=false){
   const {data}=await request('GET','/api/auth/csrf');state.csrf=data.token;
 }
 function clearSession(note=''){
+  runtimeMonitor.reset();
   state.epoch++;accountSecurity.reset();documents.reset();state.refreshId++;state.lists=newMainLists();state.operations=newOperations();state.stocktakeAttempt=null;state.stocktakeDetail=null;stocktakeSequence++;state.trends=[];state.trendsError='';state.dashboard=null;state.productDetail=null;state.editingProduct=null;state.stockPolicy=null;state.picker=null;productSequence++;productPicker.invalidate();state.reports=newInventoryReports();state.csrf='';state.me=null;state.products=[];state.stocks=[];state.orders=[];state.fulfillment=[];
   state.loaded=false;state.loading=false;state.error='';state.orderAttempt=null;state.lastOrder=null;state.receiptAttempt=null;state.receiptConfirmed=false;state.pendingCommand=null;state.detailOrderId=null;detailSequence++;
   all('form').forEach(form=>{form.dataset.operation='';form.dataset.busy='false';form.removeAttribute('aria-busy');const submit=form.querySelector('[type=submit]');if(submit)submit.disabled=false;});
@@ -73,6 +77,7 @@ function setAuthForm(register){
 }
 async function activateSession(me){
   if(!storefrontUI.accept(me))return;
+  runtimeMonitor.reset();
   const identity=String(me.id);let previous=lastIdentity;try{previous=previous||window.sessionStorage?.getItem('stockflow-query-identity');}catch{}
   if(previous&&previous!==identity){const hash='#'+currentPage();if(window.history?.replaceState)window.history.replaceState(null,'',hash);else location.hash=hash;}
   lastIdentity=identity;try{window.sessionStorage?.setItem('stockflow-query-identity',identity);}catch{}
@@ -134,7 +139,7 @@ function closeMenu(){$('#sidebar').classList.remove('open');$('#sidebar-backdrop
 function showPage(){
   if(!state.me)return;
   let {page,query}=parseHash(location.hash);
-  if(!pages[page] || (page==='accounts'&&!canManageAccounts(state.me)) || (['receipts','inventory','fulfillment','ledger','alerts','stocktakes','reconciliation','audit'].includes(page)&&!warehouse()) || (['orders','new-order'].includes(page)&&!buyer()))page='overview';
+  if(!pages[page] || (['accounts','runtime'].includes(page)&&!canManageAccounts(state.me)) || (['receipts','inventory','fulfillment','ledger','alerts','stocktakes','reconciliation','audit'].includes(page)&&!warehouse()) || (['orders','new-order'].includes(page)&&!buyer()))page='overview';
   restoreQuery(page,query);
   $('#workspace').dataset.page=page;
   all('.view').forEach(view=>{view.hidden=view.id!=='view-'+page;});
@@ -156,7 +161,8 @@ function showPage(){
   else action.hidden=true;
   storefrontUI.page(page);
   closeMenu();
-  if(page==='accounts')accountSecurity.show();
+  if(page==='runtime'){$('#updated-at').textContent='手动检查';runtimeMonitor.show();}
+  else if(page==='accounts')accountSecurity.show();
   else if(['receipts','returns'].includes(page))documents.show(page,query);
   else if(state.operations[page])loadOperations(page);
   else if(['ledger','alerts'].includes(page))loadInventoryReport(page,false);
@@ -164,6 +170,10 @@ function showPage(){
 }
 async function refreshData(){
   if(!state.me)return;
+  if(currentPage()==='runtime'&&canManageAccounts(state.me)){
+    const checking=runtimeMonitor.refresh();
+    if(state.loaded)return checking;
+  }
   if(currentPage()==='accounts'&&canManageAccounts(state.me))accountSecurity.refresh();
   const epoch=state.epoch,refreshId=++state.refreshId;
   state.loading=true;$('#refresh-data').disabled=true;$('#loading-note').hidden=false;message('#load-error');

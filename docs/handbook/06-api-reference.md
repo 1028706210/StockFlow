@@ -2,6 +2,8 @@
 
 ## 通用协议
 
+运行状态增量：GET `/api/admin/runtime` 仅管理员，返回observedAt、databaseStatus、expiryEnabled、expiryDelayMillis和metrics。既有 `/api/runtime/metrics` 仍允许仓管/管理员，保留累计字段并新增process与expiry批次状态/时间。字段口径和故障限制见[运行状态](../runtime-monitoring.md)。
+
 本机基址为 `http://127.0.0.1:8082`；Compose默认为8083。成功响应直接返回资源或分页物件，没有统一的code／data外壳。JSON字段使用camelCase，枚举值使用大写；正整数ID直接传数字，不要把画面上的SF-、RC-、RT-前缀放入路径参数。
 
 JSON写入使用 `Content-Type: application/json`，登入例外，使用 `application/x-www-form-urlencoded` 的username与password。未知JSON字段和整数字段中的小数会被拒绝。金额是JSON数值，后端BigDecimal处理；时间是无时区的ISO本地时间字串，不可假设自带Z或偏移。

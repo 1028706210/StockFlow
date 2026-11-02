@@ -23,6 +23,7 @@ public class OrderExpiration {
 
     public synchronized void expireBatch(){
         if(metrics!=null)metrics.expiryBatch();
+        try{
         java.util.List<Long> ids;
         try{
             ids=orders.expiredIds(afterId);
@@ -37,5 +38,6 @@ public class OrderExpiration {
                 LoggerFactory.getLogger(OrderExpiration.class).warn("Could not expire order {}; will retry in a later batch",id,error);
             }
         }
+        }finally{if(metrics!=null)metrics.expiryCompleted();}
     }
 }

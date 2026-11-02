@@ -2,6 +2,7 @@ import {createProductPicker} from '../../main/resources/static/assets/ui/product
 import {createUiHelpers} from '../../main/resources/static/assets/ui/ui-helpers.mjs';
 import {createInventoryReports,newInventoryReports} from '../../main/resources/static/assets/ui/inventory-reports.mjs';
 import {createAccountSecurity,canManageAccounts} from '../../main/resources/static/assets/ui/account-security.mjs';
+import {createRuntimeMonitor} from '../../main/resources/static/assets/ui/runtime-monitor.mjs';
 import {productSummary,productFields} from '../../main/resources/static/assets/ui/product-content.mjs';
 import {createStorefrontUI} from '../../main/resources/static/assets/ui/storefront.mjs';
 import test from 'node:test';
@@ -25,6 +26,27 @@ class Element {
   cloneNode(){return new Element('cart-row');}
 }
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
+test('管理员运行状态路由读取诊断与对账，退出清空在途检查画面',async()=>{
+  const pending=deferred(),calls=[];const {ui,get,location}=workbench(async(state,method,path)=>{calls.push(path);return pending.promise;});
+  ui.state.me={id:4,roles:['ROLE_ADMIN','ROLE_WAREHOUSE']};location.hash='#runtime';ui.showPage();
+  assert.equal(get('#workspace').dataset.page,'runtime');assert.ok(calls.includes('/api/admin/runtime'));assert.ok(calls.some(path=>path.startsWith('/api/inventory/reconciliation?')));
+  ui.clearSession();pending.resolve({data:{}});await new Promise(resolve=>setImmediate(resolve));assert.equal(get('#runtime-system').textContent,'');
+});
+test('仓管和买家不能从运行状态路由发起管理员诊断',()=>{
+  for(const roles of [['ROLE_WAREHOUSE'],['ROLE_BUYER']]){let calls=0;const {ui,get,location}=workbench(async()=>{calls++;return {data:[]};});ui.state.me={id:3,roles};location.hash='#runtime';ui.showPage();assert.equal(get('#workspace').dataset.page,'overview');assert.equal(calls,0);}
+});
+test('从运行状态直接登录仍初始化业务，切换概览和商品时可加载',async()=>{
+  const calls=[],{ui,get,location}=workbench(async(_state,_method,path)=>{
+    calls.push(path);
+    if(path==='/api/admin/runtime')throw new Error('诊断暂时不可用');
+    if(path.startsWith('/api/inventory/reconciliation?'))return {data:{checkedCount:0,mismatchCount:0}};
+    return {data:path.includes('/page')?{items:[],total:0,page:1,size:8,totalPages:1}:path==='/api/dashboard'?{productCount:0,lowStockCount:0,onHand:0,reserved:0}:[]};
+  });
+  location.hash='#runtime';await ui.activateSession({id:4,username:'admin',roles:['ROLE_ADMIN','ROLE_WAREHOUSE']});
+  assert.equal(ui.state.loaded,true);assert.ok(calls.includes('/api/dashboard'));
+  location.hash='#overview';ui.showPage();assert.equal(get('#workspace').dataset.page,'overview');assert.equal(ui.state.dashboard.productCount,0);
+  const initial=calls.filter(path=>path.startsWith('/api/skus/page?')).length;location.hash='#products';ui.showPage();await new Promise(resolve=>setImmediate(resolve));assert.equal(calls.filter(path=>path.startsWith('/api/skus/page?')).length,initial+1);
+});
 test('仓管直接进入账号管理路由会回到概览，不请求账号列表',()=>{
   let calls=0;const {ui,get,location}=workbench(async()=>{calls++;return {data:[]};});
   ui.state.me={id:3,roles:['ROLE_WAREHOUSE']};location.hash='#accounts';ui.showPage();
@@ -55,6 +77,7 @@ function workbench(requestJson=async()=>({status:200,data:[]}),pathname=''){
   get('#cart-line-template').content={firstElementChild:new Element('cart-template')};
   const document={body:new Element('body'),addEventListener(){},querySelector:get,querySelectorAll:selector=>selector==='.cart-line'?get('#cart-lines').children:[],createElement:tag=>new Element(tag),createTextNode:text=>{const e=new Element();e.textContent=text;return e;}};
   const context={document,window:{addEventListener(type,fn){windowListeners[type]=fn;},dispatchEvent(event){sessionEvents.push(event);}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},location:{hash:'',pathname,replace(target){this.redirected=target;}},Node:Element,Option:class extends Element{constructor(text,value){super();this.textContent=text;this.value=value;}},Intl,Date,Map,Set,Number,String,Error,AbortSignal,crypto:{randomUUID:()=> 'new-key'},setTimeout:()=>0,clearTimeout(){},parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline,URLSearchParams,parseHash,queryHash,queryParams,validateRange,snapshotLabel,createDocumentUI:()=>({reset(){},show(){},createReceipt(){},createReturn(){}}),createProductPicker,createUiHelpers,createInventoryReports,newInventoryReports,createStorefrontUI,createAccountSecurity,canManageAccounts,productSummary,productFields,requestJson,console};
+  context.createRuntimeMonitor=createRuntimeMonitor;
   let source=readFileSync(new URL('../../main/resources/static/app.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
   source+='\nglobalThis.probe={state,showPage,activateSession,loadOperations,openStocktake,showOrder,withForm,openReceipt,clearSession,openOrderCommand,loadInventoryReport:typeof loadInventoryReport==="function"?loadInventoryReport:null,openAlertReceipt:typeof openAlertReceipt==="function"?openAlertReceipt:null,openStockPolicy:typeof openStockPolicy==="function"?openStockPolicy:null,loadMainList:typeof loadMainList==="function"?loadMainList:null,openProduct:typeof openProduct==="function"?openProduct:null,rememberProducts:typeof rememberProducts==="function"?rememberProducts:null,openProductPicker:typeof openProductPicker==="function"?openProductPicker:null,openProductEditor:typeof openProductEditor==="function"?openProductEditor:null,pickProduct};';
   vm.runInNewContext(source,context);

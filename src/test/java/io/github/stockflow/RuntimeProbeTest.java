@@ -15,5 +15,13 @@ class RuntimeProbeTest {
     @Test void wraparoundExpiryQueryFailureIsCountedAsBatchFailure(){
         var mapper=mock(io.github.stockflow.order.OrderMapper.class);var service=mock(io.github.stockflow.order.OrderService.class);var metrics=new RuntimeMetrics();var expiry=new io.github.stockflow.fulfillment.OrderExpiration(mapper,service,false);org.springframework.test.util.ReflectionTestUtils.setField(expiry,"metrics",metrics);
         when(mapper.expiredIds(0)).thenReturn(java.util.List.of(1L)).thenThrow(new IllegalStateException("database unavailable"));when(mapper.expiredIds(1)).thenReturn(java.util.List.of());expiry.expireBatch();assertThrows(IllegalStateException.class,expiry::expireBatch);var counts=(java.util.Map<?,?>)metrics.snapshot().get("expiry");assertEquals(2L,counts.get("batches"));assertEquals(1L,counts.get("batchFailures"));
+        assertNotNull(counts.get("lastBatch"));var batch=(java.util.Map<?,?>)counts.get("lastBatch");assertEquals("FAILED",batch.get("status"));assertNotNull(batch.get("completedAt"));
+    }
+    @Test void candidateFailureCompletesPartialBatchAndDisabledSchedulerDoesNotRun(){
+        var mapper=mock(io.github.stockflow.order.OrderMapper.class);var service=mock(io.github.stockflow.order.OrderService.class);var metrics=new RuntimeMetrics();var expiry=new io.github.stockflow.fulfillment.OrderExpiration(mapper,service,false);org.springframework.test.util.ReflectionTestUtils.setField(expiry,"metrics",metrics);
+        expiry.scheduled();verifyNoInteractions(mapper);
+        when(mapper.expiredIds(0)).thenReturn(java.util.List.of(7L,8L));doThrow(new IllegalStateException("synthetic failure")).when(service).expire(7);
+        expiry.expireBatch();verify(service).expire(8);
+        var counts=(java.util.Map<?,?>)metrics.snapshot().get("expiry");assertNotNull(counts.get("lastBatch"));var batch=(java.util.Map<?,?>)counts.get("lastBatch");assertEquals("PARTIAL_FAILED",batch.get("status"));assertEquals(1L,batch.get("processed"));assertEquals(1L,batch.get("failed"));
     }
 }

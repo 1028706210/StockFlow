@@ -67,6 +67,8 @@ pwsh -File ./tools/Start-Showcase.ps1
 
 订单确认是业务模拟，**不产生付款**；整单退货只处理实物回库，不含退款。管理员另有账号启停入口，登录人可以修改密码，旧会话由认证版本撤销。当前没有真实支付、物流、多仓、部分退货、角色分配、邮件找回或大模型客服。账号安全边界见[说明](docs/account-security.md)。
 
+管理员可从“运行状态”手动核验数据库、请求累计指标、订单超时扫描最近批次和库存对账。读取失败会显示无法核验，扫描历史失败与当前状态分开；未接入外部告警通知。操作及排查见[运行状态说明](docs/runtime-monitoring.md)。
+
 ## 快速运行
 
 推荐使用 **Docker Engine / Docker Desktop（Linux 容器）+ Compose V2 + PowerShell 7**。以下脚本在 Windows/Linux/macOS 均使用 `pwsh`；构建容器时无需本机安装 Java、Maven 或 MySQL。
