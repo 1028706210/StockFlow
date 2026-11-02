@@ -31,3 +31,6 @@ test('退出204不解析空响应正文',async()=>{
  const result=await requestJson(()=>({epoch:1,csrf:'token'}),'POST','/api/auth/logout',undefined,undefined,async()=>({ok:true,status:204,json:()=>{throw new Error('must not parse empty body');}}));
  assert.deepEqual(result,{status:204,data:null});
 });
+test('限流反馈使用服务端等待时间且不丢失错误码',async()=>{
+ await assert.rejects(requestJson(()=>({epoch:1}),'POST','/api/auth/login',undefined,undefined,async()=>({ok:false,status:429,headers:{get:()=> '120'},json:async()=>({code:'RATE_LIMITED',requestId:'test-request'})})),error=>error.status===429&&error.retryAfter===120&&error.message.includes('120 秒'));
+});

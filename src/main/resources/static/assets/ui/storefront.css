@@ -57,6 +57,11 @@ body[data-surface="storefront"] .login-story .journey{display:none}
 .store-specification{color:var(--muted);font-size:12px;line-height:1.7;margin:0 0 18px;overflow-wrap:anywhere}
 .store-product-image{width:100%;height:auto;aspect-ratio:3/2;object-fit:contain;border-radius:8px}
 .store-artwork-note{color:var(--muted);font-size:10px;margin:8px 0 20px}
+.account-dialog{width:min(500px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}
+.account-dialog form{display:grid;gap:16px}
+.account-dialog form>label{display:grid;gap:8px;color:var(--muted);font-size:13px}
+#view-accounts .notice{margin:0;padding:14px 20px}
+@media(max-width:760px){#view-accounts .table-scroll table{min-width:0;table-layout:fixed;white-space:normal}#view-accounts :is(th,td){padding:12px 8px;overflow-wrap:anywhere}#view-accounts td button{min-height:44px}body[data-surface="storefront"] .account{max-width:none;gap:10px}}
 @media(max-width:760px){
   body[data-surface="storefront"] #view-orders table,
   body[data-surface="storefront"] #view-returns table{min-width:0;width:100%;table-layout:fixed;white-space:normal}

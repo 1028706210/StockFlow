@@ -16,14 +16,16 @@ export async function requestJson(getSession,method,path,body,csrf=getSession().
  }
  if(epoch!==getSession().epoch)throw staleError();
  if(!response.ok){
-  const messages={RETURN_EXISTS:'该订单已有待处理或已确认退货，请查看退货单。',INVALID_RETURN_STATE:'退货状态已变化，请重新打开单据。',INVALID_RECEIPT_STATE:'入库单状态已变化，请重新打开单据。',INVENTORY_LIMIT:'入库后库存将超过上限，请核对数量。',EXPORT_LIMIT:'结果超过 10000 条，请缩小筛选范围后导出。',STOCK_CHANGED:'库存已变化。请取消这张盘点单，重新核对实盘数量后建立新单。',RESERVED_STOCK:'实盘数量低于已预留量，请先核对库存和有效订单。',INVALID_STOCKTAKE_STATE:'盘点状态已变化，请重新打开盘点单。',METHOD_NOT_ALLOWED:'此操作不受支持，请刷新页面。',UNSUPPORTED_MEDIA_TYPE:'提交格式不正确，请刷新页面。',UNAUTHENTICATED:'身份验证失败，请检查账号和密码。',FORBIDDEN:'当前操作缺少权限或登录已过期，请刷新后重试。',
+  const messages={CURRENT_PASSWORD_INVALID:'当前密码不正确。',PASSWORD_REUSED:'新密码不能与当前密码相同。',ACCOUNT_PROTECTED:'不能停用本人或管理员账号。',ACCOUNT_CHECK_UNAVAILABLE:'账号状态暂时无法核验，请稍后重试。',RATE_LIMITED:'操作过于频繁，请稍后重试。',RETURN_EXISTS:'该订单已有待处理或已确认退货，请查看退货单。',INVALID_RETURN_STATE:'退货状态已变化，请重新打开单据。',INVALID_RECEIPT_STATE:'入库单状态已变化，请重新打开单据。',INVENTORY_LIMIT:'入库后库存将超过上限，请核对数量。',EXPORT_LIMIT:'结果超过 10000 条，请缩小筛选范围后导出。',STOCK_CHANGED:'库存已变化。请取消这张盘点单，重新核对实盘数量后建立新单。',RESERVED_STOCK:'实盘数量低于已预留量，请先核对库存和有效订单。',INVALID_STOCKTAKE_STATE:'盘点状态已变化，请重新打开盘点单。',METHOD_NOT_ALLOWED:'此操作不受支持，请刷新页面。',UNSUPPORTED_MEDIA_TYPE:'提交格式不正确，请刷新页面。',UNAUTHENTICATED:'身份验证失败，请检查账号和密码。',FORBIDDEN:'当前操作缺少权限或登录已过期，请刷新后重试。',
    INSUFFICIENT_STOCK:'可用库存不足，请调整商品或数量。',IDEMPOTENCY_CONFLICT:'此请求标识已用于不同的内容，请先核对原操作。',
    SKU_NOT_FOUND:'商品不存在或已停用，请刷新商品列表。',SKU_CODE_EXISTS:'SKU 编码已存在，请使用其他编码。',
    NOT_FOUND:'未找到该记录，或该记录不属于当前账号。',INVALID_REQUEST:'填写内容不符合要求，请检查字段格式和整数数量。',
    USERNAME_TAKEN:'账号已存在，请更换账号或直接登录。',INVALID_ORDER_STATE:'订单状态已变化，请刷新后重试。',
    ORDER_EXPIRED:'订单已超过确认期限，预留库存将由超时任务释放。',INVENTORY_CONFLICT:'库存记录暂时无法完成本次操作，请联系仓管核对。'};
-  const error=new Error((messages[result?.code]||'操作失败，请刷新后重试。')+(result?.requestId?'（参考号：'+result.requestId+'）':''));
-  error.status=response.status;error.code=result?.code;throw error;
+  const seconds=Number(response.headers?.get?.('Retry-After'));
+  const rateNote=result?.code==='RATE_LIMITED'&&Number.isFinite(seconds)&&seconds>0?'请在 '+Math.ceil(seconds)+' 秒后重试。':null;
+  const error=new Error((rateNote||messages[result?.code]||'操作失败，请刷新后重试。')+(result?.requestId?'（参考号：'+result.requestId+'）':''));
+  error.status=response.status;error.code=result?.code;if(Number.isFinite(seconds)&&seconds>0)error.retryAfter=Math.ceil(seconds);throw error;
  }
  return {status:response.status,data:result};
 }

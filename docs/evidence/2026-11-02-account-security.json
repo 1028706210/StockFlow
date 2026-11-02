@@ -1,0 +1,61 @@
+{
+  "date": "2026-11-02",
+  "baseCommit": "7891d0dd94a25b4af1c5f09aa42fca6c724da1fd",
+  "scope": "本人改密、管理员账号启停、认证版本撤销与单实例限流",
+  "java": {
+    "total": 118,
+    "pass": 117,
+    "fail": 0,
+    "error": 0,
+    "skip": 1,
+    "skippedScope": "本机未开启大数据专项开关",
+    "includesIsolatedMigrationTests": true,
+    "includesFinalPublicPageRegression": true,
+    "build": "BUILD SUCCESS"
+  },
+  "node": {"stockflow": 109, "digitalStore": 28, "total": 137, "pass": 137, "fail": 0, "skip": 0},
+  "review": {
+    "remainingCriticalOrImportant": 0,
+    "fixed": ["并发认证先检查后计数绕过", "Basic切换注册或改密路径绕过", "表单用户名修剪一致性", "纯空白新密码拒绝"],
+    "subsequentSelfReviewFix": "旧会话允许加载明确公开页面壳和静态文件，受保护API仍返回401",
+    "concurrentRegression": {"attempts": 20, "limit": 3, "unauthorized": 3, "rateLimited": 17}
+  },
+  "browser": {
+    "name": "Edge",
+    "runtime": "http://127.0.0.1:8096",
+    "database": "stockflow_showcase",
+    "desktop": true,
+    "syntheticAccount": "buyer_observer",
+    "persistedDisabledStateConfirmed": true,
+    "disabledOldCookieStatus": 401,
+    "reenabledOldCookieStatus": 401,
+    "reenabledFreshLoginStatus": 200,
+    "finalSyntheticAccountEnabled": false,
+    "standardDemoAccountsUnchanged": true,
+    "adminSelfDisableProtected": true,
+    "warehouseAccountNavigationAbsent": true,
+    "warehouseAccountsRouteFallsBackToOverview": true,
+    "mobile": {
+      "width": 320,
+      "height": 740,
+      "pageScrollWidth": 320,
+      "accountTableWidth": 271.2,
+      "commandDialogWidth": 288,
+      "passwordDialogWidth": 288,
+      "passwordDialogHeight": 685.2,
+      "horizontalPageOverflow": false
+    },
+    "passwordDialogInspectedOnly": true,
+    "screenshots": ["2026-11-02-account-desktop.png", "2026-11-02-account-mobile.png"],
+    "physicalPhone": false
+  },
+  "securityBoundaries": [
+    "改密HTTP验证仅在专用测试库合成账号执行，浏览器未改任何现有账号密码",
+    "改密与启停变化递增版本，旧身份下一次受保护请求失效；不能撤回已执行中的事务",
+    "V008不重写已有密码、角色或启用状态",
+    "单实例内存限流重启清零，多实例/代理需另行配置",
+    "不提供角色分配、账号删除、管理员重置密码或短信邮件找回",
+    "未完成正式公网安全审计、HTTPS部署或生产上线",
+    "新截图为实际页面，不包含密码、Cookie或数据库私有配置"
+  ]
+}

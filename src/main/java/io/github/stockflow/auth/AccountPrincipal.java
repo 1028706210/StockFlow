@@ -6,12 +6,14 @@ import java.util.List;
 
 public final class AccountPrincipal extends User {
     private final long id;
+    private final long authVersion;
     public AccountPrincipal(AccountMapper.Account account){
         super(account.username(),account.passwordHash(),account.enabled(),true,true,true,
             "ADMIN".equals(account.role())
                 ? List.of(new SimpleGrantedAuthority("ROLE_ADMIN"),new SimpleGrantedAuthority("ROLE_WAREHOUSE"))
                 : List.of(new SimpleGrantedAuthority("ROLE_"+account.role())));
-        this.id=account.id();
+        this.id=account.id();this.authVersion=account.authVersion();
     }
     public long id(){return id;}
+    public long authVersion(){return authVersion;}
 }

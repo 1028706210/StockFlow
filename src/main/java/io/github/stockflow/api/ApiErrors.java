@@ -36,9 +36,10 @@ public class ApiErrors {
         return ResponseEntity.internalServerError().body(body(r,"INTERNAL_ERROR","Unexpected server error"));
     }
     public static void writeSecurity(HttpServletRequest r,HttpServletResponse response,int status) throws IOException {
+        write(r,response,status,status==401?"UNAUTHENTICATED":"FORBIDDEN",status==401?"Authentication required":"Access denied");
+    }
+    public static void write(HttpServletRequest r,HttpServletResponse response,int status,String code,String message) throws IOException {
         response.setStatus(status);response.setContentType("application/json;charset=UTF-8");
-        var code=status==401?"UNAUTHENTICATED":"FORBIDDEN";
-        var message=status==401?"Authentication required":"Access denied";
-        response.getWriter().write("{\"code\":\""+code+"\",\"message\":\""+message+"\",\"requestId\":\""+r.getAttribute("requestId")+"\"}");
+        response.getWriter().write(tools.jackson.databind.json.JsonMapper.builder().build().writeValueAsString(body(r,code,message)));
     }
 }

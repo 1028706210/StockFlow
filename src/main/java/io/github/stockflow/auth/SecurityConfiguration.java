@@ -12,11 +12,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import tools.jackson.databind.json.JsonMapper;
 import java.nio.charset.StandardCharsets;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 
 @Configuration
 @EnableMethodSecurity
 @Profile({"local","test"})
 public class SecurityConfiguration {
+    static final java.util.Set<String> PRESENTATION_PATHS=java.util.Set.of("/shop","/shop/","/","/index.html","/app.js","/styles.css","/ui-model.mjs","/api-client.mjs","/query-state.mjs","/business-documents.mjs","/document-state.mjs");
     @Bean PasswordEncoder passwordEncoder(){return new BCryptPasswordEncoder();}
     @Bean ApplicationRunner seedDemoAccounts(AccountMapper accounts,PasswordEncoder passwords,@Value("${stockflow.demo-password}")String password){
         return arguments->{
@@ -28,15 +31,18 @@ public class SecurityConfiguration {
             accounts.seed(3,"warehouse",hash,"WAREHOUSE");accounts.seed(4,"admin",hash,"ADMIN");
         };
     }
-    @Bean SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
+    @Bean AuthRateLimits authRateLimits(@Value("${stockflow.auth.failure-limit:8}")int failures,@Value("${stockflow.auth.register-limit:50}")int registrations,@Value("${stockflow.auth.max-keys:4096}")int keys){return new AuthRateLimits(java.time.Clock.systemUTC(),failures,registrations,keys);}
+    @Bean SecurityFilterChain apiSecurity(HttpSecurity http,AuthRateLimits limits,AccountMapper accounts) throws Exception {
         var json=JsonMapper.builder().build();
-        return http.csrf(c->c.ignoringRequestMatchers(request->{
+        return http.addFilterBefore(new AuthThrottleFilter(limits),UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new SessionValidityFilter(accounts),AuthorizationFilter.class)
+            .csrf(c->c.ignoringRequestMatchers(request->{
                 var authorization=request.getHeader("Authorization");
                 return authorization!=null&&authorization.regionMatches(true,0,"Basic ",0,6);
             }))
             .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .requestCache(c->c.disable())
-            .authorizeHttpRequests(a->a.requestMatchers("/shop","/shop/","/","/index.html","/app.js","/styles.css","/ui-model.mjs","/api-client.mjs","/query-state.mjs","/business-documents.mjs","/document-state.mjs","/assets/ui/**","/api/health","/api/health/readiness","/api/auth/csrf","/api/auth/login","/api/auth/register","/error").permitAll().anyRequest().authenticated())
+            .authorizeHttpRequests(a->a.requestMatchers(PRESENTATION_PATHS.toArray(String[]::new)).permitAll().requestMatchers("/assets/ui/**","/api/health","/api/health/readiness","/api/auth/csrf","/api/auth/login","/api/auth/register","/error").permitAll().anyRequest().authenticated())
             .httpBasic(b->b.authenticationEntryPoint((r,s,e)->ApiErrors.writeSecurity(r,s,401)))
             .formLogin(f->f.loginProcessingUrl("/api/auth/login")
                 .successHandler((request,response,auth)->{

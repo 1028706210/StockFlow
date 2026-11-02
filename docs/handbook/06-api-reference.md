@@ -17,6 +17,18 @@ JSON写入使用 `Content-Type: application/json`，登入例外，使用 `appli
 
 ## 分页与查询
 
+### 账号安全增量接口
+
+| 方法 | 路径 | 权限与契约 |
+|---|---|---|
+| POST | `/api/auth/password` | 已登录本人；JSON字段 `currentPassword`、`newPassword`；Cookie写入要求CSRF，成功204并失效当前及其他旧会话 |
+| GET | `/api/admin/accounts?q=&page=1&size=8` | 仅管理员；q最多32字符，page从1开始，size为1–50；仅返回id、username、role、enabled |
+| PUT | `/api/admin/accounts/{id}/enabled` | 仅管理员；JSON `{"enabled":false}` 或true；不能停用自己或管理员，相同状态不重复变更版本 |
+
+新密码为8–64个字符、UTF-8不超过72字节，不能全为空白或与原密码相同，保留首尾空格。原密码错误400 `CURRENT_PASSWORD_INVALID`，重用400 `PASSWORD_REUSED`，受保护账号409 `ACCOUNT_PROTECTED`。账号状态无法核验返回503 `ACCOUNT_CHECK_UNAVAILABLE`。认证/注册/改密超限429 `RATE_LIMITED`，携带 `Retry-After` 秒数。完整默认限额与单实例边界见[账号安全](../account-security.md)。
+
+账号接口的q/size约束以本节为准，以下通用业务分页参数不覆盖这些专用约束。
+
 | 参数 | 规则 | 适用范围 |
 |---|---|---|
 | q | 最多120字符，服务端按SQL定义查询并转义LIKE万用字符 | 各主列表；不是全站全文检索 |

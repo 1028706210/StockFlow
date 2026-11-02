@@ -167,11 +167,14 @@ inventory_ledger 表级键与约束：
 | password_hash | VARCHAR(100) NOT NULL | BCrypt哈希，非明文 |
 | role | VARCHAR(16) NOT NULL | BUYER／WAREHOUSE／ADMIN |
 | enabled | BOOLEAN NOT NULL DEFAULT TRUE | 账号可用状态 |
+| auth_version | BIGINT NOT NULL DEFAULT 0 | V008新增；改密、启停变化递增，撤销旧认证会话 |
 | created_at | DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) | 建立时间 |
 
 app_user 表级键与约束：
 
 - `CHECK(role IN ('BUYER','WAREHOUSE','ADMIN'))`
+
+V008只新增认证版本列，不修改已有密码、角色或启用状态。会话身份保存认证时的版本，后续受保护API核对数据库当前版本。重复设置相同启用状态不递增版本；重新启用不会恢复此前会话。账号列表不返回密码哈希或认证版本。
 
 ### operation_audit 操作审计
 

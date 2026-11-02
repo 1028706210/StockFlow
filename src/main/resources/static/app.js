@@ -3,6 +3,7 @@ import {createUiHelpers} from '/assets/ui/ui-helpers.mjs';
 import {createInventoryReports,newInventoryReports} from '/assets/ui/inventory-reports.mjs';
 import {createStorefrontUI} from '/assets/ui/storefront.mjs';
 import {productFields} from '/assets/ui/product-content.mjs';
+import {createAccountSecurity,canManageAccounts} from '/assets/ui/account-security.mjs';
 import {parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline} from '/ui-model.mjs';
 
 import {requestJson} from '/api-client.mjs';
@@ -13,6 +14,7 @@ const ui = createUiHelpers(document, Node);
 const {$,all,money,time,node,button,message,failure,badge,cell,productCell,empty} = ui;
 const storefrontUI=createStorefrontUI({document,location,node,button,money});
 const pages = {
+  accounts:['账号管理','账号管理','仅管理员可启停账号；停用保留订单与审计，不能修改角色。'],
   receipts:['入库单','GOODS RECEIPTS','建立入库草稿，核对实物后确认入库。'],
   returns:['退货单','ORDER RETURNS','整单退货申请与实物接收记录，不涉及退款。'],
   stocktakes:['库存盘点','STOCK COUNTS','记录实盘数量，确认差异并追踪调整。'],
@@ -32,6 +34,7 @@ const state = {operations:newOperations(),stocktakeAttempt:null,stocktakeDetail:
   queries:{products:'',inventory:'',orders:'',fulfillment:''},page:{products:1,inventory:1,orders:1,fulfillment:1},stockFilter:'all',ordersStatus:'all',fulfillmentStatus:'all',orderAttempt:null,lastOrder:null,receiptAttempt:null,receiptConfirmed:false};
 const warehouse = () => state.me?.roles.some(r => r==='ROLE_WAREHOUSE' || r==='ROLE_ADMIN');
 const buyer = () => state.me?.roles.includes('ROLE_BUYER');
+const accountSecurity=createAccountSecurity({document,getSession:()=>state,request,ui,onPasswordChanged:()=>clearSession('密码已修改，请使用新密码重新登录。')});
 let toastTimer;
 function toast(message,error=false) {
   clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').className='toast'+(error?' error':'');$('#toast').hidden=false;
@@ -53,7 +56,7 @@ async function ensureCsrf(force=false){
   const {data}=await request('GET','/api/auth/csrf');state.csrf=data.token;
 }
 function clearSession(note=''){
-  state.epoch++;documents.reset();state.refreshId++;state.lists=newMainLists();state.operations=newOperations();state.stocktakeAttempt=null;state.stocktakeDetail=null;stocktakeSequence++;state.trends=[];state.trendsError='';state.dashboard=null;state.productDetail=null;state.editingProduct=null;state.stockPolicy=null;state.picker=null;productSequence++;productPicker.invalidate();state.reports=newInventoryReports();state.csrf='';state.me=null;state.products=[];state.stocks=[];state.orders=[];state.fulfillment=[];
+  state.epoch++;accountSecurity.reset();documents.reset();state.refreshId++;state.lists=newMainLists();state.operations=newOperations();state.stocktakeAttempt=null;state.stocktakeDetail=null;stocktakeSequence++;state.trends=[];state.trendsError='';state.dashboard=null;state.productDetail=null;state.editingProduct=null;state.stockPolicy=null;state.picker=null;productSequence++;productPicker.invalidate();state.reports=newInventoryReports();state.csrf='';state.me=null;state.products=[];state.stocks=[];state.orders=[];state.fulfillment=[];
   state.loaded=false;state.loading=false;state.error='';state.orderAttempt=null;state.lastOrder=null;state.receiptAttempt=null;state.receiptConfirmed=false;state.pendingCommand=null;state.detailOrderId=null;detailSequence++;
   all('form').forEach(form=>{form.dataset.operation='';form.dataset.busy='false';form.removeAttribute('aria-busy');const submit=form.querySelector('[type=submit]');if(submit)submit.disabled=false;});
   $('#stocktake-cancel').disabled=false;$('#receipt-reset').disabled=false;$('#new-order-reset').disabled=false;$('#sign-out').disabled=false;
@@ -73,10 +76,10 @@ async function activateSession(me){
   const identity=String(me.id);let previous=lastIdentity;try{previous=previous||window.sessionStorage?.getItem('stockflow-query-identity');}catch{}
   if(previous&&previous!==identity){const hash='#'+currentPage();if(window.history?.replaceState)window.history.replaceState(null,'',hash);else location.hash=hash;}
   lastIdentity=identity;try{window.sessionStorage?.setItem('stockflow-query-identity',identity);}catch{}
-  documents.reset();state.me=me;state.epoch++;state.lists=newMainLists();state.operations=newOperations();state.stocktakeAttempt=null;state.stocktakeDetail=null;stocktakeSequence++;state.trends=[];state.trendsError='';state.dashboard=null;state.productStatus='all';$('#products-status').value='all';state.reports=newInventoryReports();$('#ledger-search').value='';$('#alerts-search').value='';$('#ledger-type').value='';state.pendingCommand=null;state.detailOrderId=null;
+  accountSecurity.reset();documents.reset();state.me=me;state.epoch++;state.lists=newMainLists();state.operations=newOperations();state.stocktakeAttempt=null;state.stocktakeDetail=null;stocktakeSequence++;state.trends=[];state.trendsError='';state.dashboard=null;state.productStatus='all';$('#products-status').value='all';state.reports=newInventoryReports();$('#ledger-search').value='';$('#alerts-search').value='';$('#ledger-type').value='';state.pendingCommand=null;state.detailOrderId=null;
   $('#login-password').value='';$('#register-password').value='';$('#register-confirm').value='';$('#login-screen').hidden=true;$('#workspace').hidden=false;
   $('#account-name').textContent=me.username;$('#account-role').textContent=warehouse()?(me.roles.includes('ROLE_ADMIN')?'管理员':'仓库管理'):'买家';$('#avatar').textContent=me.username.slice(0,1).toUpperCase();
-  all('[data-role]').forEach(item=>{item.hidden=item.dataset.role==='buyer'?!buyer():!warehouse();});all('[data-filter]').forEach(input=>{input.value='';});
+  all('[data-role]').forEach(item=>{item.hidden=item.dataset.role==='buyer'?!buyer():item.dataset.role==='admin'?!canManageAccounts(state.me):!warehouse();});all('[data-filter]').forEach(input=>{input.value='';});
   state.queries={products:'',inventory:'',orders:'',fulfillment:''};state.page={products:1,inventory:1,orders:1,fulfillment:1};state.stockFilter='all';state.ordersStatus='all';state.fulfillmentStatus='all';
   $('#inventory-status').value='all';$('#orders-status').value='all';$('#fulfillment-status').value='all';resetOrder();showPage();publishChatSession();await refreshData();
 }
@@ -131,7 +134,7 @@ function closeMenu(){$('#sidebar').classList.remove('open');$('#sidebar-backdrop
 function showPage(){
   if(!state.me)return;
   let {page,query}=parseHash(location.hash);
-  if(!pages[page] || (['receipts','inventory','fulfillment','ledger','alerts','stocktakes','reconciliation','audit'].includes(page)&&!warehouse()) || (['orders','new-order'].includes(page)&&!buyer()))page='overview';
+  if(!pages[page] || (page==='accounts'&&!canManageAccounts(state.me)) || (['receipts','inventory','fulfillment','ledger','alerts','stocktakes','reconciliation','audit'].includes(page)&&!warehouse()) || (['orders','new-order'].includes(page)&&!buyer()))page='overview';
   restoreQuery(page,query);
   $('#workspace').dataset.page=page;
   all('.view').forEach(view=>{view.hidden=view.id!=='view-'+page;});
@@ -153,13 +156,15 @@ function showPage(){
   else action.hidden=true;
   storefrontUI.page(page);
   closeMenu();
-  if(['receipts','returns'].includes(page))documents.show(page,query);
+  if(page==='accounts')accountSecurity.show();
+  else if(['receipts','returns'].includes(page))documents.show(page,query);
   else if(state.operations[page])loadOperations(page);
   else if(['ledger','alerts'].includes(page))loadInventoryReport(page,false);
   else if(state.loaded&&state.lists[page])loadMainList(page);
 }
 async function refreshData(){
   if(!state.me)return;
+  if(currentPage()==='accounts'&&canManageAccounts(state.me))accountSecurity.refresh();
   const epoch=state.epoch,refreshId=++state.refreshId;
   state.loading=true;$('#refresh-data').disabled=true;$('#loading-note').hidden=false;message('#load-error');
   try{
@@ -612,7 +617,7 @@ $('#policy-form').addEventListener('submit',event=>{
 });
 
 function newOperations(){return Object.fromEntries(['stocktakes','reconciliation','audit'].map(kind=>[kind,{items:[],page:1,size:8,total:0,totalPages:1,loading:false,error:'',sequence:0}]));}
-const operationTitles={RECEIPT_CREATE:'建立入库单',RECEIPT_CONFIRM:'确认入库单',RECEIPT_CANCEL:'取消入库单',RETURN_CREATE:'申请退货',RETURN_CONFIRM:'确认退货入库',RETURN_CANCEL:'取消退货',SKU_CREATE:'创建商品',SKU_UPDATE:'编辑商品',STOCK_POLICY:'调整安全库存',STOCKTAKE_CREATE:'建立盘点',STOCKTAKE_CONFIRM:'确认盘点',STOCKTAKE_CANCEL:'取消盘点'};
+const operationTitles={ACCOUNT_PASSWORD_CHANGE:'修改密码',ACCOUNT_STATUS:'启停账号',RECEIPT_CREATE:'建立入库单',RECEIPT_CONFIRM:'确认入库单',RECEIPT_CANCEL:'取消入库单',RETURN_CREATE:'申请退货',RETURN_CONFIRM:'确认退货入库',RETURN_CANCEL:'取消退货',SKU_CREATE:'创建商品',SKU_UPDATE:'编辑商品',STOCK_POLICY:'调整安全库存',STOCKTAKE_CREATE:'建立盘点',STOCKTAKE_CONFIRM:'确认盘点',STOCKTAKE_CANCEL:'取消盘点'};
 const countStatuses={DRAFT:'待确认',CONFIRMED:'已确认',CANCELLED:'已取消'};
 let stocktakeSequence=0;
 function copyIdentifier(value){return button(value,async()=>{try{await navigator.clipboard.writeText(value);toast('已复制 '+value);}catch{toast('复制失败，请手动选择编号复制。',true);}},'copy-identifier');}

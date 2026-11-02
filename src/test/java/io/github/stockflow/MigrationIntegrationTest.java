@@ -35,14 +35,17 @@ class MigrationIntegrationTest {
         migrate();assertEquals(1,scalar("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='order_item' AND COLUMN_NAME='sku_name'"));
         assertEquals(1,scalar("SELECT COUNT(*) FROM flyway_schema_history WHERE CAST(version AS UNSIGNED)=6 AND success=1"));
         assertEquals(1,scalar("SELECT COUNT(*) FROM flyway_schema_history WHERE CAST(version AS UNSIGNED)=7 AND success=1"));
+        assertEquals(1,scalar("SELECT COUNT(*) FROM flyway_schema_history WHERE CAST(version AS UNSIGNED)=8 AND success=1"));
         long history=scalar("SELECT COUNT(*) FROM flyway_schema_history");migrate();assertEquals(history,scalar("SELECT COUNT(*) FROM flyway_schema_history"));
     }
     @Test void knownLegacySchemaPreservesBusinessDataAndUnknownSnapshots()throws Exception{
-        legacy();sql("INSERT INTO sku(id,code,name,price) VALUES(9001,'MIGRATE-KEEP','Original product',12.50)");
+        legacy();sql("INSERT INTO app_user(id,username,password_hash,role,enabled) VALUES(9001,'migrate_buyer','synthetic-old-hash','BUYER',false)");
+        sql("INSERT INTO sku(id,code,name,price) VALUES(9001,'MIGRATE-KEEP','Original product',12.50)");
         sql("INSERT INTO inventory(sku_id,on_hand,reserved) VALUES(9001,9,0)");
         sql("INSERT INTO customer_order(id,buyer_id,request_key,payload_hash,status,total,expires_at) VALUES(9001,1,'migration-keep','hash','COMPLETED',12.50,NOW())");
         sql("INSERT INTO order_item(order_id,sku_id,quantity,unit_price) VALUES(9001,9001,1,12.50)");
         migrate();assertEquals(9,scalar("SELECT on_hand FROM inventory WHERE sku_id=9001"));
+        assertEquals(1,scalar("SELECT COUNT(*) FROM app_user WHERE id=9001 AND enabled=false AND password_hash='synthetic-old-hash' AND auth_version=0"));
         assertEquals(1,scalar("SELECT COUNT(*) FROM order_item WHERE order_id=9001 AND sku_code IS NULL AND sku_name IS NULL AND specification IS NULL AND unit IS NULL"));
         assertEquals(1,scalar("SELECT COUNT(*) FROM flyway_schema_history WHERE type='BASELINE' AND version='4'"));
         assertEquals(1,scalar("SELECT COUNT(*) FROM flyway_schema_history WHERE CAST(version AS UNSIGNED)=6 AND success=1"));

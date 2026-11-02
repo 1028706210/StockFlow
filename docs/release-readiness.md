@@ -11,7 +11,7 @@
 - 确认经营使用场景与交付方式；如需要配送，先定义地址与联系人快照、访问权限和保留期限。当前没有真实物流或支付。
 - 建立独立生产配置，关闭演示账号初始化及展示准备标志，评估并关闭不需要的 Basic 客户端兼容入口；保持会话、CSRF 与归属校验。
 - 配置 HTTPS、Secure Cookie、受限网络入口、数据库最小权限和安全的密钥配置。不能只将回环监听改成公网监听。
-- 设计并实现登录/注册频率限制、异常登录记录、账号停用与密码修改/重置流程；不要使用共享演示口令作为真实账号方案。
+- 本地已实现登录/注册/改密及Basic认证有界限流、失败认证日志、账号启停与本人改密，见[账号安全](account-security.md)。正式使用仍需确认多实例与代理边界、账号核实及密码找回流程，不能使用共享演示口令作为真实账号方案。
 - 为数据库不可用、订单到期扫描失败、对账差异建立可验证告警；当前内存指标重启归零，不等于外部监控已接入。
 - 在目标部署环境重复备份恢复演练，约定备份保留、异地存放、恢复负责人及实际恢复时限；本机演示演练不能直接承诺生产 RPO/RTO。
 - 取得生产部署、外部收款、付费资源和真实用户数据处理所需的明确授权，再执行上线。
@@ -37,6 +37,7 @@ pwsh -File ./tools/Test-ShowcaseRecovery.ps1
 | 入库与整单退货幂等、多行事务 | DocumentIntegrationTest |
 | 库存变化后旧盘点失效、只读对账 | OperationsIntegrationTest |
 | Cookie、CSRF、角色与本人归属 | AuthenticationIntegrationTest |
+| 原密码、全部旧会话撤销、账号启停权限与并发认证限额 | AccountSecurityIntegrationTest、AuthRateLimitsTest |
 | 旧结构安全接管、未知库拒绝、旧快照保持未知 | MigrationIntegrationTest |
 | 商品资料长度、买家不可修改、规格单位历史快照 | StockFlowIntegrationTest |
 

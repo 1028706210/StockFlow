@@ -1,6 +1,7 @@
 import {createProductPicker} from '../../main/resources/static/assets/ui/product-picker.mjs';
 import {createUiHelpers} from '../../main/resources/static/assets/ui/ui-helpers.mjs';
 import {createInventoryReports,newInventoryReports} from '../../main/resources/static/assets/ui/inventory-reports.mjs';
+import {createAccountSecurity,canManageAccounts} from '../../main/resources/static/assets/ui/account-security.mjs';
 import {productSummary,productFields} from '../../main/resources/static/assets/ui/product-content.mjs';
 import {createStorefrontUI} from '../../main/resources/static/assets/ui/storefront.mjs';
 import test from 'node:test';
@@ -24,6 +25,18 @@ class Element {
   cloneNode(){return new Element('cart-row');}
 }
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
+test('仓管直接进入账号管理路由会回到概览，不请求账号列表',()=>{
+  let calls=0;const {ui,get,location}=workbench(async()=>{calls++;return {data:[]};});
+  ui.state.me={id:3,roles:['ROLE_WAREHOUSE']};location.hash='#accounts';ui.showPage();
+  assert.equal(get('#workspace').dataset.page,'overview');assert.equal(calls,0);
+});
+test('退出后较慢的管理员账号列表不能写回页面',async()=>{
+  const pending=deferred();const {ui,get,location}=workbench(()=>pending.promise);
+  ui.state.me={id:4,roles:['ROLE_ADMIN','ROLE_WAREHOUSE']};location.hash='#accounts';ui.showPage();ui.clearSession();
+  pending.resolve({data:{items:[{id:9,username:'old-account',role:'BUYER',enabled:true}],total:1,page:1,totalPages:1}});
+  await Promise.resolve();await Promise.resolve();
+  assert.equal(get('#accounts-body').children.length,0);assert.equal(get('#password-current').value,'');
+});
 test('订购前台默认使用买家登录，仓管身份转回后台且不加载买家业务',async()=>{
   let requests=0;const {get,ui,location}=workbench(async()=>{requests++;return {data:[]};},'/shop');
   assert.equal(get('#login-user').value,'buyer');assert.match(get('#auth-title').textContent,/订购/);
@@ -41,7 +54,7 @@ function workbench(requestJson=async()=>({status:200,data:[]}),pathname=''){
   const get=selector=>{if(!elements.has(selector))elements.set(selector,new Element(selector.replace('#','')));return elements.get(selector);};
   get('#cart-line-template').content={firstElementChild:new Element('cart-template')};
   const document={body:new Element('body'),addEventListener(){},querySelector:get,querySelectorAll:selector=>selector==='.cart-line'?get('#cart-lines').children:[],createElement:tag=>new Element(tag),createTextNode:text=>{const e=new Element();e.textContent=text;return e;}};
-  const context={document,window:{addEventListener(type,fn){windowListeners[type]=fn;},dispatchEvent(event){sessionEvents.push(event);}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},location:{hash:'',pathname,replace(target){this.redirected=target;}},Node:Element,Option:class extends Element{constructor(text,value){super();this.textContent=text;this.value=value;}},Intl,Date,Map,Set,Number,String,Error,AbortSignal,crypto:{randomUUID:()=> 'new-key'},setTimeout:()=>0,clearTimeout(){},parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline,URLSearchParams,parseHash,queryHash,queryParams,validateRange,snapshotLabel,createDocumentUI:()=>({reset(){},show(){},createReceipt(){},createReturn(){}}),createProductPicker,createUiHelpers,createInventoryReports,newInventoryReports,createStorefrontUI,productSummary,productFields,requestJson,console};
+  const context={document,window:{addEventListener(type,fn){windowListeners[type]=fn;},dispatchEvent(event){sessionEvents.push(event);}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},location:{hash:'',pathname,replace(target){this.redirected=target;}},Node:Element,Option:class extends Element{constructor(text,value){super();this.textContent=text;this.value=value;}},Intl,Date,Map,Set,Number,String,Error,AbortSignal,crypto:{randomUUID:()=> 'new-key'},setTimeout:()=>0,clearTimeout(){},parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline,URLSearchParams,parseHash,queryHash,queryParams,validateRange,snapshotLabel,createDocumentUI:()=>({reset(){},show(){},createReceipt(){},createReturn(){}}),createProductPicker,createUiHelpers,createInventoryReports,newInventoryReports,createStorefrontUI,createAccountSecurity,canManageAccounts,productSummary,productFields,requestJson,console};
   let source=readFileSync(new URL('../../main/resources/static/app.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
   source+='\nglobalThis.probe={state,showPage,activateSession,loadOperations,openStocktake,showOrder,withForm,openReceipt,clearSession,openOrderCommand,loadInventoryReport:typeof loadInventoryReport==="function"?loadInventoryReport:null,openAlertReceipt:typeof openAlertReceipt==="function"?openAlertReceipt:null,openStockPolicy:typeof openStockPolicy==="function"?openStockPolicy:null,loadMainList:typeof loadMainList==="function"?loadMainList:null,openProduct:typeof openProduct==="function"?openProduct:null,rememberProducts:typeof rememberProducts==="function"?rememberProducts:null,openProductPicker:typeof openProductPicker==="function"?openProductPicker:null,openProductEditor:typeof openProductEditor==="function"?openProductEditor:null,pickProduct};';
   vm.runInNewContext(source,context);
