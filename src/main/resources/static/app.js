@@ -5,6 +5,7 @@ import {createStorefrontUI} from '/assets/ui/storefront.mjs';
 import {productFields} from '/assets/ui/product-content.mjs';
 import {createAccountSecurity,canManageAccounts} from '/assets/ui/account-security.mjs';
 import {createRuntimeMonitor} from '/assets/ui/runtime-monitor.mjs';
+import {createWorkspaceNavigation} from '/assets/ui/workspace-navigation.mjs';
 import {parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline} from '/ui-model.mjs';
 
 import {requestJson} from '/api-client.mjs';
@@ -38,6 +39,7 @@ const warehouse = () => state.me?.roles.some(r => r==='ROLE_WAREHOUSE' || r==='R
 const buyer = () => state.me?.roles.includes('ROLE_BUYER');
 const accountSecurity=createAccountSecurity({document,getSession:()=>state,request,ui,onPasswordChanged:()=>clearSession('密码已修改，请使用新密码重新登录。')});
 const runtimeMonitor=createRuntimeMonitor({document,getSession:()=>state,request,ui});
+const workspaceNav=createWorkspaceNavigation({document,node});
 let toastTimer;
 function toast(message,error=false) {
   clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').className='toast'+(error?' error':'');$('#toast').hidden=false;
@@ -59,6 +61,7 @@ async function ensureCsrf(force=false){
   const {data}=await request('GET','/api/auth/csrf');state.csrf=data.token;
 }
 function clearSession(note=''){
+  workspaceNav.reset();
   runtimeMonitor.reset();
   state.epoch++;accountSecurity.reset();documents.reset();state.refreshId++;state.lists=newMainLists();state.operations=newOperations();state.stocktakeAttempt=null;state.stocktakeDetail=null;stocktakeSequence++;state.trends=[];state.trendsError='';state.dashboard=null;state.productDetail=null;state.editingProduct=null;state.stockPolicy=null;state.picker=null;productSequence++;productPicker.invalidate();state.reports=newInventoryReports();state.csrf='';state.me=null;state.products=[];state.stocks=[];state.orders=[];state.fulfillment=[];
   state.loaded=false;state.loading=false;state.error='';state.orderAttempt=null;state.lastOrder=null;state.receiptAttempt=null;state.receiptConfirmed=false;state.pendingCommand=null;state.detailOrderId=null;detailSequence++;
@@ -144,12 +147,11 @@ function showPage(){
   $('#workspace').dataset.page=page;
   all('.view').forEach(view=>{view.hidden=view.id!=='view-'+page;});
   all('[data-nav]').forEach(item=>{item.classList.toggle('active',item.dataset.nav===page);if(item.dataset.nav===page)item.setAttribute('aria-current','page');else item.removeAttribute('aria-current');});
+  workspaceNav.render(page,state.me);
   const title=buyer()&&page==='products'?'浏览商品':buyer()&&page==='returns'?'我的退货':pages[page][0];
   $('#page-title').textContent=title;$('#breadcrumb-page').textContent=title;
   $('#page-kicker').textContent=pages[page][1];
   $('#page-description').textContent=buyer()&&page==='products'?'浏览在售商品和价格，选择商品创建订单。':buyer()&&page==='overview'?'查看本人订单进度、待办和最近七日下单情况。':buyer()&&page==='returns'?'跟踪本人整单退货申请，待接收时可以取消。':pages[page][2];
-  $('#products-nav-label').textContent=buyer()?'浏览商品':'商品管理';
-  $('#returns-nav-label').textContent=buyer()?'我的退货':'退货单';
   $('#products-status-filter').hidden=!!buyer();
   const action=$('#heading-action');action.hidden=false;
   if(page==='receipts'&&warehouse()){action.textContent='建立入库单';action.onclick=()=>documents.createReceipt();}
@@ -222,29 +224,26 @@ function render(){
 }
 function renderOverview(){
   renderTasksAndTrend();
-  $('#hero-title').textContent=buyer()?'选购有数，订单可追踪。':'库存有序，履约从容。';
-  $('#hero-description').textContent=buyer()?'从选择商品到确认收货，查看自己的每一步进度。':'连接每一件商品，掌握每一步流转。';
   $('#overview-scope-note').textContent=buyer()?'订单统计仅包含本人数据；下方展示本人最近订单。':'指标由服务端汇总全部数据；下方仅展示近期记录。';
   const valid=!!state.dashboard;const summary=state.dashboard||{};
-  $('#hero-summary').textContent=!valid?'业务汇总待加载':warehouse()?summary.lowStockCount+' 种商品低于安全库存':summary.pendingCount+' 笔订单等待确认';
   const metrics=warehouse()?[
-    ['商品种类',summary.productCount,'CATALOG','全部商品，含停用商品',''],
-    ['实存总量',summary.onHand,'ON HAND','全库实存数量',''],
-    ['已预留量',summary.reserved,'RESERVED','全库订单占用数量','accent'],
-    ['低库存商品',summary.lowStockCount,'ATTENTION','在售商品，可用量低于各自安全线','warning']
+    ['商品种类',summary.productCount,'全部商品，含停用商品',''],
+    ['实存总量',summary.onHand,'全库实存数量',''],
+    ['已预留量',summary.reserved,'全库订单占用数量','accent'],
+    ['低库存商品',summary.lowStockCount,'在售商品，可用量低于各自安全线','warning']
   ]:storefrontUI.enabled?[
-    ['待我确认',summary.pendingCount,'TO CONFIRM','提交后需在期限内确认','accent'],
-    ['待仓库发货',summary.confirmedCount,'TO SHIP','已确认，等待仓管履约',''],
-    ['待我收货',summary.shippedCount,'TO RECEIVE','实际收到商品后确认收货','accent'],
-    ['我的订单',summary.orderCount,'MY ORDERS','只统计当前买家本人订单','']
+    ['待我确认',summary.pendingCount,'提交后需在期限内确认','accent'],
+    ['待仓库发货',summary.confirmedCount,'已确认，等待仓管履约',''],
+    ['待我收货',summary.shippedCount,'实际收到商品后确认收货','accent'],
+    ['我的订单',summary.orderCount,'只统计当前买家本人订单','']
   ]:[
-    ['在售商品',summary.productCount,'CATALOG','全部在售商品',''],
-    ['我的订单',summary.orderCount,'MY ORDERS','全部本人订单',''],
-    ['待确认订单',summary.pendingCount,'PENDING','本人待确认订单','accent'],
-    ['订单总额',money(summary.orderTotal||0),'ORDER VALUE','全部本人订单金额，含已取消订单','']
+    ['在售商品',summary.productCount,'全部在售商品',''],
+    ['我的订单',summary.orderCount,'全部本人订单',''],
+    ['待确认订单',summary.pendingCount,'本人待确认订单','accent'],
+    ['订单总额',money(summary.orderTotal||0),'全部本人订单金额，含已取消订单','']
   ];
-  $('#metrics').replaceChildren(...metrics.map(([label,value,kicker,note,tone],index)=>{
-    const item=node('div',undefined,'metric '+tone),heading=node('div',label,'metric-label');heading.append(node('span',kicker));
+  $('#metrics').replaceChildren(...metrics.map(([label,value,note,tone],index)=>{
+    const item=node('div',undefined,'metric '+tone),heading=node('div',label,'metric-label');
     const icon=node('i',undefined,'icon icon-'+['package','warehouse','shopping-bag','arrow-up-right'][index]);icon.setAttribute('aria-hidden','true');const symbol=node('span',undefined,'metric-symbol');symbol.append(icon);item.append(symbol,heading,node('div',valid?String(value):'—','metric-value'),node('p',note,'metric-note'));return item;
   }));
   $('#recent-title').textContent=warehouse()?'库存概况':'最近订单';
@@ -263,12 +262,6 @@ function renderOverview(){
   }
   $('#recent-empty').hidden=rows.length>0;
   if(!rows.length)empty('#recent-empty',state.error?'数据暂不可用':warehouse()?'还没有库存记录':'还没有订单',state.error?'请检查服务连接后，点击刷新数据。':warehouse()?'先创建商品，再为商品完成第一笔入库。':'选择商品并提交后，可以在这里查看订单。');
-  $('#quick-description').textContent=warehouse()?'让库存准备就绪，再交给买家下单。':'从选购到收货，跟踪每一笔订单。';
-  $('#quick-actions').replaceChildren(...(warehouse()?[
-    button('新增商品',openSku,'button secondary'),button('为商品入库',()=>openReceipt(),'button primary'),button('处理订单履约',()=>navigate('fulfillment'),'button secondary')
-  ]:[
-    button('浏览商品',()=>navigate('products'),'button secondary'),button('创建订单',()=>navigate('new-order'),'button primary')
-  ]));
 }
 function renderTable(kind){
   const list=state.lists[kind],body=$('#'+kind+'-body');body.replaceChildren();
@@ -522,8 +515,6 @@ const inventoryReports = createInventoryReports({
   }
 });
 const {load: loadInventoryReport, render: renderInventoryReport} = inventoryReports;
-$('#inventory-insight').addEventListener('click',()=>navigate('alerts'));
-$('#hero-orders').addEventListener('click',()=>navigate('orders'));
 
 async function openProduct(id){
   const epoch=state.epoch,sequence=++productSequence,dialog=$('#product-dialog');state.productDetail=null;
@@ -641,7 +632,6 @@ function renderTasksAndTrend(){
   const summary=state.dashboard||{},tasks=warehouse()?[
     ['待发货',summary.confirmedCount,'处理已确认订单',()=>{state.fulfillmentStatus='CONFIRMED';state.lists.fulfillment.page=1;$('#fulfillment-status').value='CONFIRMED';navigate('fulfillment');}],
     ['库存预警',summary.lowStockCount,'查看补货缺口',()=>navigate('alerts')],
-    ['库存核对','只读','核对订单与流水',()=>navigate('reconciliation')]
   ]:[['待确认',summary.pendingCount,'确认我的订单',()=>{state.ordersStatus='PENDING_CONFIRM';state.lists.orders.page=1;$('#orders-status').value='PENDING_CONFIRM';navigate('orders');}],['待收货',summary.shippedCount,'查看已发货订单',()=>{state.ordersStatus='SHIPPED';state.lists.orders.page=1;$('#orders-status').value='SHIPPED';navigate('orders');}]];
   $('#overview-tasks').replaceChildren(...tasks.map(([label,count,note,action])=>{const card=button('',action,'task-card');card.disabled=!state.dashboard;card.append(node('span',label),node('strong',count??'—'),node('small',note+' ↗'));return card;}));
   const days=state.trends||[],maximum=Math.max(1,...days.flatMap(day=>warehouse()?[day.inbound,day.outbound,day.orders]:[day.orders]));

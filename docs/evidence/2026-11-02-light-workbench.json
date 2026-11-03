@@ -1,0 +1,28 @@
+{
+  "date":"2026-11-02",
+  "baseCommit":"670441fcb80f8af37b1b646fd5be7f630b1e831f",
+  "scope":"浅色主题、导航从13项收敛为6组、概览减法",
+  "plugin":{"name":"Product Design","workflows":["index","audit","user-context preflight","get-context"],"preflight":"无已保存上下文，采用当前请求与实际页面","newFigmaOrCanvaFiles":false},
+  "node":{"stockflow":121,"digitalStore":28,"total":149,"pass":149,"fail":0,"skip":0},
+  "localJava":{"executed":true,"tests":123,"pass":122,"fail":0,"errors":0,"skip":1,"skippedReason":"未开启的大数据证据测试","build":"SUCCESS","completedAt":"2026-11-02T19:36:43+08:00"},
+  "localDeployment":{"path":"D:/project/StockFlow","url":"http://127.0.0.1:8096/#overview","readiness":"UP","jarSha256":"BA553A068534039A15622078B3B227C582206C133840FBDBB10AFB9201485A67","sourceAndDeployedJarMatch":true,"oldJarBackupPrivate":true,"processPathAndListenerCheckedBeforeRestart":true},
+  "review":{"critical":0,"importantFound":2,"importantFixed":["桌面买家端216px侧栏空白","手机买家端无效菜单"],"browserReproducedBeforeFix":true,"browserVerifiedAfterFix":true,"remainingKnownImportant":0},
+  "browser":{
+    "name":"Edge","preview":"http://127.0.0.1:8096/#overview","initialSourcePreview":"http://127.0.0.1:8097/#overview","realBackend":"http://127.0.0.1:8096","finalDeployedEntryRechecked":true,
+    "primaryEntries":6,"inventorySecondaryEntries":5,"orderSecondaryEntries":2,"adminSystemSecondaryEntries":3,
+    "overviewLoadedRealCounts":true,"inventoryLedgerNavigation":true,"stocktakeDialogInspectedWithoutSubmitting":true,"productDetailEscapeClose":true,
+    "storefrontDesktopMarginAfterFix":"0px","storefrontMobileMenuVisibleAfterFix":false,
+    "mobile":{"viewportWidth":320,"viewportHeight":740,"clientWidth":305,"scrollWidth":305,"contextLinkHeight":44,"menuEscapeFocus":"menu-toggle","chatPosition":"static","accountAuxiliaryLabelsHidden":true},
+    "screenshots":["2026-11-02-light-overview.jpg","2026-11-02-light-inventory.jpg","2026-11-02-light-login.jpg","2026-11-02-light-mobile.jpg"],
+    "screenshotFormat":"浏览器原生JPEG字节，使用.jpg扩展名，未修改画面",
+    "screenshotSources":{"overview":"8096最终部署","inventory":"8096最终部署","mobile":"8096最终部署","login":"8097中间源码预览，同一版登录页"},
+    "physicalPhone":false
+  },
+  "changes":{"databaseMigrations":0,"newDependencies":0,"businessApiChanges":false,"businessDataModifiedForAcceptance":false,"passwordChanged":false,"defaultParticlesStarted":false},
+  "limits":[
+    "本机展示部署不等于生产上线；双仓库发布和新CI需单独核对本轮提交",
+    "组件权限和异步隔离由既有测试与新增导航回归覆盖，不宣称全面安全审计",
+    "浏览器未重新执行写入库存/订单全生命周期，相关业务代码未改",
+    "历史PDF/HTML与旧深色截图保留原日期，不代表当前视觉"
+  ]
+}

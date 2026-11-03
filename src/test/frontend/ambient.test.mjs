@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {initAmbient} from '../../main/resources/static/assets/ui/ambient.mjs';
 
+test('浅色主题不读取粒子或持久偏好，不启动任何动画能力',()=>{
+  let reads=0;const root={body:{dataset:{theme:'light'}},querySelectorAll(){reads++;throw new Error('浅色不应初始化Canvas');}};
+  const dispose=initAmbient(root,{});assert.equal(reads,0);assert.equal(typeof dispose,'function');dispose();
+});
+
 function fixture({saved='',reduced=false,noContext=false,density='standard',kind='overview',width=800,height=190,page='overview'}={}){
   const listeners=new Map(),frames=new Map(),storage=new Map([['stockflow.motion',saved],['stockflow.density',density]]);
   const eventTarget=()=>({addEventListener(type,fn){listeners.set(this.name+type,fn);},removeEventListener(type){listeners.delete(this.name+type);}});

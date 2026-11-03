@@ -1,5 +1,6 @@
 /** Local decorative layers: viewport dust, flowing streams and pointer connections. */
 export function initAmbient(root=document,env=window){
+  if(root.body?.dataset?.theme==='light')return ()=>{};
   const canvases=[...root.querySelectorAll('[data-particle-field]')];
   if(!canvases.length)return ()=>{};
   const media=env.matchMedia('(prefers-reduced-motion: reduce)'),fine=env.matchMedia('(pointer: fine)');

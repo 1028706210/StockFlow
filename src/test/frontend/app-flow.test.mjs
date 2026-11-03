@@ -3,6 +3,7 @@ import {createUiHelpers} from '../../main/resources/static/assets/ui/ui-helpers.
 import {createInventoryReports,newInventoryReports} from '../../main/resources/static/assets/ui/inventory-reports.mjs';
 import {createAccountSecurity,canManageAccounts} from '../../main/resources/static/assets/ui/account-security.mjs';
 import {createRuntimeMonitor} from '../../main/resources/static/assets/ui/runtime-monitor.mjs';
+import {createWorkspaceNavigation} from '../../main/resources/static/assets/ui/workspace-navigation.mjs';
 import {productSummary,productFields} from '../../main/resources/static/assets/ui/product-content.mjs';
 import {createStorefrontUI} from '../../main/resources/static/assets/ui/storefront.mjs';
 import test from 'node:test';
@@ -26,6 +27,13 @@ class Element {
   cloneNode(){return new Element('cart-row');}
 }
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
+test('库存深链接显示分组导航并保留原查询地址，退出清空全部入口',()=>{
+  const {ui,get,location}=workbench(()=>new Promise(()=>{}));ui.state.me={id:4,roles:['ROLE_ADMIN','ROLE_WAREHOUSE']};location.hash='#ledger?type=SHIP';ui.showPage();
+  assert.equal(get('#workspace-navigation').children.length,6);assert.equal(get('#section-navigation').children.length,5);
+  assert.equal(get('#workspace-navigation').children.find(x=>x.className==='active').textContent,'库存中心');
+  assert.equal(get('#section-navigation').children.find(x=>x.className==='active').href,'#ledger');assert.match(location.hash,/^#ledger/);
+  ui.clearSession();assert.equal(get('#workspace-navigation').children.length,0);assert.equal(get('#section-navigation').hidden,true);
+});
 test('管理员运行状态路由读取诊断与对账，退出清空在途检查画面',async()=>{
   const pending=deferred(),calls=[];const {ui,get,location}=workbench(async(state,method,path)=>{calls.push(path);return pending.promise;});
   ui.state.me={id:4,roles:['ROLE_ADMIN','ROLE_WAREHOUSE']};location.hash='#runtime';ui.showPage();
@@ -78,6 +86,7 @@ function workbench(requestJson=async()=>({status:200,data:[]}),pathname=''){
   const document={body:new Element('body'),addEventListener(){},querySelector:get,querySelectorAll:selector=>selector==='.cart-line'?get('#cart-lines').children:[],createElement:tag=>new Element(tag),createTextNode:text=>{const e=new Element();e.textContent=text;return e;}};
   const context={document,window:{addEventListener(type,fn){windowListeners[type]=fn;},dispatchEvent(event){sessionEvents.push(event);}},CustomEvent:class {constructor(type,options){this.type=type;this.detail=options.detail;}},location:{hash:'',pathname,replace(target){this.redirected=target;}},Node:Element,Option:class extends Element{constructor(text,value){super();this.textContent=text;this.value=value;}},Intl,Date,Map,Set,Number,String,Error,AbortSignal,crypto:{randomUUID:()=> 'new-key'},setTimeout:()=>0,clearTimeout(){},parseQuantity,priceToCents,cartPreview,paginateRows,stockState,orderActions,orderTimeline,URLSearchParams,parseHash,queryHash,queryParams,validateRange,snapshotLabel,createDocumentUI:()=>({reset(){},show(){},createReceipt(){},createReturn(){}}),createProductPicker,createUiHelpers,createInventoryReports,newInventoryReports,createStorefrontUI,createAccountSecurity,canManageAccounts,productSummary,productFields,requestJson,console};
   context.createRuntimeMonitor=createRuntimeMonitor;
+  context.createWorkspaceNavigation=createWorkspaceNavigation;
   let source=readFileSync(new URL('../../main/resources/static/app.js',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,'');
   source+='\nglobalThis.probe={state,showPage,activateSession,loadOperations,openStocktake,showOrder,withForm,openReceipt,clearSession,openOrderCommand,loadInventoryReport:typeof loadInventoryReport==="function"?loadInventoryReport:null,openAlertReceipt:typeof openAlertReceipt==="function"?openAlertReceipt:null,openStockPolicy:typeof openStockPolicy==="function"?openStockPolicy:null,loadMainList:typeof loadMainList==="function"?loadMainList:null,openProduct:typeof openProduct==="function"?openProduct:null,rememberProducts:typeof rememberProducts==="function"?rememberProducts:null,openProductPicker:typeof openProductPicker==="function"?openProductPicker:null,openProductEditor:typeof openProductEditor==="function"?openProductEditor:null,pickProduct};';
   vm.runInNewContext(source,context);
