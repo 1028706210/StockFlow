@@ -33,6 +33,7 @@ const pages = {
   'new-order':['创建订单','CREATE AN ORDER','选择商品和数量，提交一笔新的订单。']
 };
 function newMainLists(){return Object.fromEntries(['products','inventory','orders','fulfillment'].map(kind=>[kind,{items:[],total:0,page:1,size:8,totalPages:1,loading:false,error:'',sequence:0}]));}
+const rangeKinds=['orders','fulfillment','ledger','audit'],rangeKeys=['from','to','minTotal','maxTotal'];
 const state = {operations:newOperations(),stocktakeAttempt:null,stocktakeDetail:null,trends:[],trendsError:'',lists:newMainLists(),dashboard:null,productStatus:'all',productDetail:null,editingProduct:null,stockPolicy:null,picker:null,reports:newInventoryReports(),csrf:'',me:null,epoch:0,refreshId:0,loading:false,loaded:false,error:'',products:[],stocks:[],orders:[],fulfillment:[],pendingCommand:null,detailOrderId:null,
   queries:{products:'',inventory:'',orders:'',fulfillment:''},page:{products:1,inventory:1,orders:1,fulfillment:1},stockFilter:'all',ordersStatus:'all',fulfillmentStatus:'all',orderAttempt:null,lastOrder:null,receiptAttempt:null,receiptConfirmed:false};
 const warehouse = () => state.me?.roles.some(r => r==='ROLE_WAREHOUSE' || r==='ROLE_ADMIN');
@@ -62,6 +63,7 @@ async function ensureCsrf(force=false){
 }
 function clearSession(note=''){
   workspaceNav.reset();
+  for(const kind of rangeKinds){for(const key of rangeKeys){const control=$('#'+kind+'-'+key);if(control)control.value='';}syncRangeDisclosure(kind,{},true);}
   runtimeMonitor.reset();
   state.epoch++;accountSecurity.reset();documents.reset();state.refreshId++;state.lists=newMainLists();state.operations=newOperations();state.stocktakeAttempt=null;state.stocktakeDetail=null;stocktakeSequence++;state.trends=[];state.trendsError='';state.dashboard=null;state.productDetail=null;state.editingProduct=null;state.stockPolicy=null;state.picker=null;productSequence++;productPicker.invalidate();state.reports=newInventoryReports();state.csrf='';state.me=null;state.products=[];state.stocks=[];state.orders=[];state.fulfillment=[];
   state.loaded=false;state.loading=false;state.error='';state.orderAttempt=null;state.lastOrder=null;state.receiptAttempt=null;state.receiptConfirmed=false;state.pendingCommand=null;state.detailOrderId=null;detailSequence++;
@@ -123,6 +125,7 @@ function readQuery(kind){
  return query;
 }
 function persistQuery(kind,query=readQuery(kind)){
+ syncRangeDisclosure(kind,query);
  if(currentPage()!==kind)return;
  const hash=queryHash(kind,query);if(location.hash!==hash&&window.history?.pushState)window.history.pushState(null,'',hash);
 }
@@ -136,6 +139,14 @@ function restoreQuery(kind,query){
  if(kind==='ledger'){state.reports.ledger.cursor=/^\d+$/.test(query.beforeId||'')?Number(query.beforeId):null;state.reports.ledger.query=query.q||'';state.reports.ledger.type=query.type||'';$('#ledger-type').value=query.type||'';}
  if(kind==='audit')$('#audit-action').value=query.action||'';
  if(kind==='reconciliation')$('#reconciliation-only').checked=query.mismatchOnly!=='false';
+ syncRangeDisclosure(kind,query,true);
+}
+function syncRangeDisclosure(kind,query={},restore=false){
+ if(!rangeKinds.includes(kind))return;
+ const disclosure=$('#'+kind+'-advanced-filters');if(!disclosure)return;
+ const count=rangeKeys.filter(key=>query[key]!==undefined&&query[key]!==null&&query[key]!=='').length;
+ $('#'+kind+'-range-summary').textContent=count?'已设置 '+count+' 项':kind==='orders'||kind==='fulfillment'?'日期、金额':'日期';
+ if(restore)disclosure.open=count>0;
 }
 function navigate(page){const hash=queryHash(page,state.lists[page]||state.operations[page]||state.reports[page]?readQuery(page):{});if(location.hash===hash)showPage();else location.hash=hash;}
 function closeMenu(){$('#sidebar').classList.remove('open');$('#sidebar-backdrop').hidden=true;$('#menu-toggle').setAttribute('aria-expanded','false');}
@@ -626,6 +637,7 @@ function resetList(kind){
   for(const key of ['from','to','minTotal','maxTotal']){const control=$('#'+kind+'-'+key);if(control)control.value='';}
   state.queries[kind]='';$('#'+kind+'-search').value='';$('#'+kind+'-status').value='all';
   if(kind==='products'){state.productStatus=buyer()?'active':'all';$('#products-status').value=state.productStatus;}else if(kind==='inventory')state.stockFilter='all';else state[kind+'Status']='all';
+  syncRangeDisclosure(kind,{},true);
   loadMainList(kind,true);
 }
 function renderTasksAndTrend(){
@@ -721,6 +733,16 @@ window.addEventListener('stockflow:chat-expired',event=>{if(state.me&&event.deta
 let lastIdentity='';
 const documents=createDocumentUI({state,request,warehouse,buyer,node,button,money,time,toast,refresh:refreshData,onQuery:persistQuery,pickProduct:select=>openProductPicker('document',select)});
 for(const kind of ['orders','fulfillment'])for(const key of ['from','to','minTotal','maxTotal'])$('#'+kind+'-'+key).addEventListener('change',()=>loadMainList(kind,true));
+for(const kind of rangeKinds)for(const key of rangeKeys){
+ const control=$('#'+kind+'-'+key);if(!control)continue;
+ control.addEventListener('input',()=>syncRangeDisclosure(kind,readQuery(kind)));
+ control.addEventListener('invalid',()=>{$('#'+kind+'-advanced-filters').open=true;});
+}
+for(const kind of rangeKinds)$('#'+kind+'-clear-range').addEventListener('click',()=>{
+ for(const key of rangeKeys){const control=$('#'+kind+'-'+key);if(control)control.value='';}
+ syncRangeDisclosure(kind,{},true);$('#'+kind+'-range-toggle').focus();
+ return state.lists[kind]?loadMainList(kind,true):kind==='ledger'?loadInventoryReport(kind):loadOperations(kind,true);
+});
 for(const kind of ['orders','fulfillment','inventory'])$('#'+kind+'-export').addEventListener('click',async event=>{
  event.preventDefault();const epoch=state.epoch,control=event.currentTarget;control.disabled=true;
  try{const query=readQuery(kind);validateRange(query);delete query.page;delete query.size;const path=kind==='fulfillment'?'/api/fulfillment/orders/export':'/api/'+kind+'/export';

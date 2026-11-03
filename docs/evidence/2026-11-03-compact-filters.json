@@ -1,0 +1,23 @@
+{
+  "date":"2026-11-03",
+  "baseCommit":"b8d72f3a8a1e65371f13be7cd61354c9fad3ac2f",
+  "scope":"4个业务页折叠范围条件、3处导出归并、保留原权限和查询",
+  "node":{"stockflow":129,"digitalStore":28,"total":157,"pass":157,"fail":0,"skip":0,"newBehaviorRegressions":8,"redThenGreen":true},
+  "java":{"tests":123,"pass":122,"fail":0,"errors":0,"skip":1,"skippedReason":"未开启的大数据证据专项","verify":"SUCCESS","finalResourcesRepackaged":true},
+  "review":{"confirmedCritical":0,"confirmedImportant":0,"minorFixed":"流水和审计未提交的日期编辑不同步摘要","focusedRecheckPassed":true,"additionalBrowserFix":"部分无效日期收起后原生校验无法聚焦，invalid时展开所属区域"},
+  "browser":{
+    "name":"Edge","roles":["admin","warehouse","buyer"],"finalUrl":"http://127.0.0.1:8096/#fulfillment","sourcePreview":"http://127.0.0.1:8097",
+    "defaultFulfillmentRows":5,"minTotal31Rows":2,"minTotal1000Rows":0,"clearReturnsRows":5,
+    "rangeRestoredAfterReload":true,"manualCollapsePreservedOnRefresh":true,"zeroAmountCounted":true,"clearFocus":"fulfillment-range-toggle",
+    "nativePartialDate":{"badInputBefore":true,"collapsedBeforeSubmit":true,"openBeforeFix":false,"focusBeforeFix":"","openAfterFix":true,"focusAfterFix":"ledger-from","nativeValidationPreserved":true},
+    "auditDateQuery":true,"buyerCompletedOrder":"SF-1","differentIdentityQueryCleared":true,
+    "mobile":{"viewportWidth":320,"viewportHeight":740,"clientWidth":305,"scrollWidth":305,"summaryHeightApprox":44.8,"auditExpandedChecked":true,"buyerChecked":true,"warehouseChecked":true,"physicalPhone":false},
+    "csv":{"clickedRealExport":true,"downloadEventNotificationTimedOut":true,"actualFileVerified":true,"file":"orders-2026-11-03.csv","localFileModifiedAt":"2026-11-03T11:25:26+08:00","rows":1,"order":"SF-1","status":"COMPLETED","total":"79.90"},
+    "screenshots":["2026-11-03-compact-orders.jpg","2026-11-03-compact-expanded.jpg","2026-11-03-compact-mobile.jpg","2026-11-03-compact-warehouse-mobile.jpg"],
+    "screenshotSources":{"orders":"8096最终部署","expanded":"8096最终部署","warehouseMobile":"8096最终部署","buyerMobile":"8097相同源码预览"},
+    "browserExtensionErrorsPresent":true
+  },
+  "deployment":{"readiness":"UP","jarSha256":"7859F09008598818AE55D532B1A18955F6C8BB56ECF778D9473A5C96A66950BF","sourceAndDeployedJarMatch":true,"oldJarBackedUpPrivate":true,"listenerJarPathAndParentChecked":true},
+  "changes":{"databaseMigrations":0,"dependenciesAdded":0,"businessApiChanges":false,"businessWritesDuringBrowserAcceptance":false,"passwordChanged":false},
+  "limits":["本机展示与公开源码不等于生产上线","实体手机与全面无障碍/安全未验","未重跑浏览器订单及库存写入生命周期","发布提交及新CI在最终交付记录核对","旧PDF及截图保留原日期"]
+}

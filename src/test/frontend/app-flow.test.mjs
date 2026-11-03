@@ -20,13 +20,58 @@ class Element {
   append(...children){this.children.push(...children);}
   replaceChildren(...children){this.children=children;this.ownText='';}
   addEventListener(name,handler){this.listeners[name]=handler;}
-  setAttribute(){} removeAttribute(){} focus(){} reset(){}
+  setAttribute(){} removeAttribute(){} focus(){this.focused=true;} reset(){}
   showModal(){this.open=true;} close(){this.open=false;}
   querySelector(selector){if(!this.fields.has(selector))this.fields.set(selector,new Element(selector));return this.fields.get(selector);}
   querySelectorAll(){return [];}
   cloneNode(){return new Element('cart-row');}
 }
 const deferred=()=>{let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};};
+test('订单深链接展开范围条件，后退到无范围地址时收起并清空',()=>{
+ const {ui,get,location}=workbench(()=>new Promise(()=>{}));ui.state.me={id:1,roles:['ROLE_BUYER']};
+ location.hash='#orders?from=2026-11-01&minTotal=0';ui.showPage();
+ assert.equal(get('#orders-advanced-filters').open,true);assert.equal(get('#orders-range-summary').textContent,'已设置 2 项');
+ location.hash='#orders';ui.showPage();assert.equal(get('#orders-advanced-filters').open,false);assert.equal(get('#orders-from').value,'');assert.equal(get('#orders-range-summary').textContent,'日期、金额');
+});
+test('查询刷新保留手动收起状态，仍显示并传递范围参数',async()=>{
+ const paths=[],{ui,get,location}=workbench(async(_s,_m,path)=>{paths.push(path);return {data:{items:[],total:0,page:1,size:8,totalPages:1}};});
+ ui.state.me={id:3,roles:['ROLE_WAREHOUSE']};location.hash='#fulfillment?minTotal=0';ui.showPage();get('#fulfillment-advanced-filters').open=false;
+ await ui.loadMainList('fulfillment');assert.equal(get('#fulfillment-advanced-filters').open,false);assert.equal(get('#fulfillment-range-summary').textContent,'已设置 1 项');assert.match(paths.at(-1),/minTotal=0/);
+});
+test('清空更多筛选只清范围、重置页码并返回摘要焦点',async()=>{
+ const paths=[],{ui,get,location}=workbench(async(_s,_m,path)=>{paths.push(path);return {data:{items:[],total:0,page:1,size:8,totalPages:1}};});
+ ui.state.me={id:3,roles:['ROLE_WAREHOUSE']};location.hash='#fulfillment?q=SF-3&status=CONFIRMED&page=4&from=2026-11-01&maxTotal=90';ui.showPage();
+ await get('#fulfillment-clear-range').listeners.click();
+ const query=new URLSearchParams(paths.at(-1).split('?')[1]);assert.equal(query.get('q'),'SF-3');assert.equal(query.get('status'),'CONFIRMED');assert.equal(query.get('page'),'1');assert.equal(query.has('from'),false);assert.equal(query.has('maxTotal'),false);
+ assert.equal(get('#fulfillment-advanced-filters').open,false);assert.equal(get('#fulfillment-range-summary').textContent,'日期、金额');assert.equal(get('#fulfillment-range-toggle').focused,true);
+});
+test('流水和审计的范围清空复用原查询并保留类型条件',async()=>{
+ for(const [kind,param,value] of [['ledger','type','SHIP'],['audit','action','SKU_UPDATE']]){
+  const paths=[],{ui,get,location}=workbench(async(_s,_m,path)=>{paths.push(path);return {data:kind==='ledger'?{items:[],nextCursor:null}:{items:[],total:0,page:1,size:8,totalPages:1}};});
+  ui.state.me={id:3,roles:['ROLE_WAREHOUSE']};location.hash='#'+kind+'?q=杯&'+param+'='+value+'&from=2026-11-01';ui.showPage();assert.equal(get('#'+kind+'-advanced-filters').open,true);
+  await get('#'+kind+'-clear-range').listeners.click();const query=new URLSearchParams(paths.at(-1).split('?')[1]);assert.equal(query.get('q'),'杯');assert.equal(query.get(param),value);assert.equal(query.has('from'),false);assert.equal(get('#'+kind+'-range-summary').textContent,'日期');
+ }
+});
+test('范围无效时不伪称查询成功，保留设置数量与原失败反馈',async()=>{
+ let calls=0;const {ui,get,location}=workbench(async()=>{calls++;return {data:{items:[]}};});ui.state.me={id:1,roles:['ROLE_BUYER']};location.hash='#orders';ui.showPage();
+ get('#orders-from').value='2026-11-03';get('#orders-to').value='2026-11-01';await ui.loadMainList('orders');
+ assert.equal(calls,0);assert.match(ui.state.lists.orders.error,/日期/);assert.equal(get('#orders-range-summary').textContent,'已设置 2 项');
+});
+test('退出清空各范围控件和展开状态，不沿用上一身份的设置摘要',()=>{
+ const {ui,get,location}=workbench(()=>new Promise(()=>{}));ui.state.me={id:3,roles:['ROLE_WAREHOUSE']};location.hash='#ledger?from=2026-11-01';ui.showPage();ui.clearSession();
+ for(const kind of ['orders','fulfillment','ledger','audit']){assert.equal(get('#'+kind+'-advanced-filters').open,false);assert.equal(get('#'+kind+'-from').value,'');assert.doesNotMatch(get('#'+kind+'-range-summary').textContent,/已设置/);}
+});
+test('流水和审计编辑日期但尚未查询时，摘要同步且不修改地址或发请求',()=>{
+ for(const kind of ['ledger','audit']){
+  let calls=0;const {ui,get,location}=workbench(async()=>{calls++;return {data:{items:[]}};});ui.state.me={id:3,roles:['ROLE_WAREHOUSE']};location.hash='#'+kind;ui.showPage();const initialCalls=calls,initialHash=location.hash;
+  get('#'+kind+'-from').value='2026-11-01';get('#'+kind+'-from').listeners.input();assert.equal(get('#'+kind+'-range-summary').textContent,'已设置 1 项');assert.equal(get('#'+kind+'-advanced-filters').open,false);
+  get('#'+kind+'-from').value='';get('#'+kind+'-from').listeners.input();assert.equal(get('#'+kind+'-range-summary').textContent,'日期');assert.equal(calls,initialCalls);assert.equal(location.hash,initialHash);
+ }
+});
+test('原生无效输入会展开所属筛选区，保留浏览器校验而不触发查询',()=>{
+ let calls=0;const {ui,get,location}=workbench(async()=>{calls++;return {data:{items:[]}};});ui.state.me={id:3,roles:['ROLE_WAREHOUSE']};location.hash='#ledger';ui.showPage();const initialCalls=calls;
+ get('#ledger-advanced-filters').open=false;get('#ledger-from').listeners.invalid();assert.equal(get('#ledger-advanced-filters').open,true);assert.equal(calls,initialCalls);
+});
 test('库存深链接显示分组导航并保留原查询地址，退出清空全部入口',()=>{
   const {ui,get,location}=workbench(()=>new Promise(()=>{}));ui.state.me={id:4,roles:['ROLE_ADMIN','ROLE_WAREHOUSE']};location.hash='#ledger?type=SHIP';ui.showPage();
   assert.equal(get('#workspace-navigation').children.length,6);assert.equal(get('#section-navigation').children.length,5);
