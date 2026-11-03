@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-03",
+  "baseline": "d2e58e63e6d0719617889f40a1ecb6d22e80a44f",
+  "scope": "四个现有CSS的字号、行距、控件尺寸和响应式布局",
+  "node": { "tests": 157, "passed": 157, "failed": 0, "skipped": 0, "stockflow": 129, "digitalStore": 28 },
+  "diffCheck": "passed",
+  "review": "独立只读CSS复核未发现阻断问题",
+  "localBuild": { "result": "BUILD SUCCESS", "javaTests": "本地资源打包跳过Java测试；完整检查由本次提交CI另行核对" },
+  "deployment": {
+    "baseUrl": "http://127.0.0.1:8096",
+    "root": "D:/project/StockFlow",
+    "readiness": "UP",
+    "jarSha256": "D681243DBBC128A8D5E382EBAC88CED829FB8D4FEB888C00F8F609CD1AC5C19A",
+    "sourceAndRunningJarMatch": true,
+    "previousJarBackedUp": true,
+    "database": "独立本地展示库，未清空或重置"
+  },
+  "browser": {
+    "name": "Microsoft Edge",
+    "desktop": { "bodyPx": 16, "tableBodyPx": 15, "searchPx": 16, "pageClientWidth": 2040, "pageScrollWidth": 2040, "ordersVisible": 5 },
+    "viewport320": { "clientWidth": 305, "scrollWidth": 305, "metricLabelRightMarginPx": 0, "trendClientWidth": 243, "trendScrollWidth": 660, "trendFontPx": 13, "expandedDateInputWidthApprox": 242, "dateFontPx": 16 },
+    "buyer390": { "clientWidth": 375, "scrollWidth": 375, "quantityFontPx": 16, "quantityHeightPx": 44, "draftQuantity": 99, "draftSubtotal": "¥7,910.10", "draftSubmitted": false, "draftCleared": true, "ordersContainerWidth": 342, "ordersScrollWidth": 600, "detailContainerWidth": 302, "detailScrollWidth": 560, "dialogWidth": 342, "dialogScrollWidth": 342 },
+    "buyer800": { "sourcePreview": "http://127.0.0.1:8097", "api": "http://127.0.0.1:8096", "layout": "单列", "clientWidth": 785, "scrollWidth": 785 },
+    "chat": { "bodyPx": 16, "bodyLineHeightPx": 26.4, "inputPx": 16, "inputLineHeightPx": 27.2, "messageSent": false },
+    "login": { "inputPx": 16, "viewport320Overflow": false },
+    "temporaryViewportReset": true
+  },
+  "screenshots": [
+    "2026-11-03-readable-orders.jpg",
+    "2026-11-03-readable-overview.jpg",
+    "2026-11-03-readable-cart.jpg",
+    "2026-11-03-readable-catalog.jpg"
+  ],
+  "limits": ["非实体手机验收", "未覆盖全部浏览器与全面无障碍", "没有新的支付或物流验证", "正式生产未上线", "CI结果另按本次提交记录"]
+}
